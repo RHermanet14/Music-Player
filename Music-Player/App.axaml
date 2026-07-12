@@ -6,5 +6,14 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="Styles/AppDefaultStyles.axaml"></StyleInclude>
     </Application.Styles>
+
+    <Application.Resources>
+        <SolidColorBrush x:Key="PrimaryBackground">#14172D</SolidColorBrush>
+    <LinearGradientBrush x:Key="PrimaryBackgroundGradient" StartPoint="0%, 0%" EndPoint="100%, 0%">
+        <GradientStop Offset="0" Color="#111214"></GradientStop>
+        <GradientStop Offset="1" Color="#151E3E"></GradientStop>
+    </LinearGradientBrush>
+        </Application.Resources>
 </Application>
