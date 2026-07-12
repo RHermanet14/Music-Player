@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="Music-Player/Music-Player.csproj" />
+  <Project Path="PlaybackLibrary/PlaybackLibrary.csproj" />
 </Solution>
