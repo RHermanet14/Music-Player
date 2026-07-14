@@ -6,7 +6,7 @@ namespace PlaybackLibrary;
 
 public class MediaPlayer : TemplatedControl
 {
-    // Define a custom property that can be bound or set in XAML
+    
     public static readonly StyledProperty<string> TextProperty =
         AvaloniaProperty.Register<MediaPlayer, string>(nameof(Text));
 

@@ -6,10 +6,41 @@
     <Style Selector="local|MediaPlayer">
         <Setter Property="Template">
             <ControlTemplate>
-                <Border Background="LightBlue" CornerRadius="4" Padding="10">
-                    <TextBlock Text="{TemplateBinding Text}" 
-                               HorizontalAlignment="Center" 
-                               VerticalAlignment="Center"/>
+                <Border Background="#303030" CornerRadius="4" Padding="10">
+                    <StackPanel>
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">
+                            --------0-------
+                        </TextBlock>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Button
+                                Content="&lt;&lt;"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                            />
+                            <Button
+                                Content="&lt;"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                            />
+                            <Button
+                                Content="="
+                                Click="Play"
+                                HorizontalAlignment="Center" 
+                                VerticalAlignment="Center"
+                            />
+                            <Button
+                                Content="&gt;"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                            />
+                            <Button
+                                Content="&gt;&gt;"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                            />
+                        </StackPanel>
+                    </StackPanel>
+                    
                 </Border>
             </ControlTemplate>
         </Setter>
