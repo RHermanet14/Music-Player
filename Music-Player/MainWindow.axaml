@@ -11,7 +11,7 @@
         <Border Padding="20" Background="{DynamicResource PrimaryBackgroundGradient}">
             <Grid RowDefinitions="*, Auto">
                 <StackPanel Spacing="12">
-                    <Button Content="Open Folder" HorizontalAlignment="Stretch"></Button>
+                    <Button Content="Open Folder" HorizontalAlignment="Stretch" Click="OnOpenFolderButtonClick"></Button>
                     <Button Content="Search" HorizontalAlignment="Stretch"></Button>
                     <Button Content="Home" HorizontalAlignment="Stretch"></Button>
                 </StackPanel>

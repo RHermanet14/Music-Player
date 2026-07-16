@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- dotnet run -\-project Music-Player -f net10.0-windows10.0.19041.0 -->
   <PropertyGroup>
-    <TargetFramework>net10.0;net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetFrameworks>net10.0;net10.0-windows10.0.19041.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
