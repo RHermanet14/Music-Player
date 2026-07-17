@@ -49,11 +49,11 @@ internal sealed class WindowsSongPlayback : ISongPlayback
 internal sealed class StubSongPlayback : ISongPlayback
 {
     public void Load(string fileName) =>
-        Console.WriteLine($"LoadSong: non-Windows stub ({fileName})");
+        Console.WriteLine($"Load: Linux version WOP");
 
-    public void Play() => Console.WriteLine("Play: non-Windows stub");
+    public void Play() => Console.WriteLine("Play: Linux version WOP");
 
-    public void Pause() => Console.WriteLine("Pause: non-Windows stub");
+    public void Pause() => Console.WriteLine("Pause: Linux version WOP");
 
     public void Dispose() { }
 }
