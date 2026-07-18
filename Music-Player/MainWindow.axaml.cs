@@ -117,7 +117,7 @@ public partial class MainWindow : Window
         // MediaPlayer.SetSong(s.LastOpenedSong);
     }
 
-    public async Task OnOpenFolderButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    public async void OnOpenFolderButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         // 1. open file browser
         // 2. check if selected folder is valid
