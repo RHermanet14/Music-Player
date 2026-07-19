@@ -6,7 +6,9 @@
         Width="1024" Height="600"
         x:Class="Music_Player.MainWindow"
         Title="Music_Player"
-        xmlns:controls="using:PlaybackLibrary">
+        xmlns:controls="using:PlaybackLibrary"
+        xmlns:local="using:Music_Player"
+        x:DataType="local:MainWindow">
     <Grid Background="{DynamicResource PrimaryBackground}" ColumnDefinitions="200, *, 200">
         <Border Padding="20" Background="{DynamicResource PrimaryBackgroundGradient}">
             <Grid RowDefinitions="*, Auto">
@@ -22,9 +24,19 @@
             <controls:MediaPlayer Grid.Row="1"/>
         </Grid>
         <StackPanel Grid.Column="2">
-            <!--This is where the list of songs are going to be
-                or make a custom component that basically is a stackpanel
-            -->
+            <ItemsControl ItemsSource="{Binding Playlist}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" ItemSpacing="8"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="local:SongFile">
+                        <Button Content="{Binding Name}" Padding="12,6"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </StackPanel>
     </Grid>
 </Window>

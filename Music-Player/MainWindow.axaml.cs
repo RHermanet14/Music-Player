@@ -63,6 +63,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        DataContext = this;
         _settings = new SettingsService();
         LoadPlaylist();
     }
@@ -106,8 +107,9 @@ public partial class MainWindow : Window
                 }
             }
         }
-        Playlist = new ObservableCollection<SongFile>(SongList); // update the xaml
-        // MediaPlayer.SetSong(s.LastOpenedSong);
+        Playlist.Clear();
+        foreach (var song in SongList)
+            Playlist.Add(song);
     }
 
     private void OnPlaylistSongClick()
