@@ -5,14 +5,13 @@ using System.IO;
 using System;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
-using System.Collections.Generic;
 
 namespace Music_Player;
 
 #region app settings
 public class AppSettings
 {
-    public IStorageFolder? LastOpenedFolder {get; set;}
+    public string LastOpenedFolderPath { get; set; } = "";
     public string LastOpenedFile { get; set; } = "";
 }
 
@@ -23,16 +22,21 @@ public class SettingsService
         "MyApp",
         "settings.json");
 
-    // From the documentation: "Consider wrapping your Load method in a try/catch block. If the JSON file becomes corrupt or
-    // its schema changes between application versions, JsonSerializer.Deserialize will throw an exception. Returning a default
-    // AppSettings instance in the catch block prevents your application from crashing on startup." <-- TODO
     public AppSettings Load()
     {
-        if (!File.Exists(SettingsPath))
-            return new AppSettings();
+        try
+        {
+            if (!File.Exists(SettingsPath))
+                return new AppSettings();
 
-        var json = File.ReadAllText(SettingsPath);
-        return JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+            var json = File.ReadAllText(SettingsPath);
+            return JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Settings Load Error: {ex.Message}");
+            return new AppSettings();
+        }
     }
 
     public void Save(AppSettings settings)
@@ -51,65 +55,65 @@ public class SettingsService
 
 public class SongFile
 {
-    public string Name {get; set;} = "";
-    public Uri Path {get;set;} = new Uri("");
+    public string Name { get; set; } = "";
+    public Uri Path { get; set; } = new Uri("about:blank");
 }
 
 public partial class MainWindow : Window
 {
     private readonly SettingsService _settings;
-    private readonly List<SongFile> SongList = []; // why does it suggest to make readonly?
-    public ObservableCollection<SongFile> Playlist {get; set;} = [];
+    public ObservableCollection<SongFile> Playlist { get; } = [];
+
     public MainWindow()
     {
         InitializeComponent();
         DataContext = this;
         _settings = new SettingsService();
-        LoadPlaylist();
+        _ = LoadPlaylistAsync();
     }
 
-    private async void LoadPlaylist()
+    private async Task LoadPlaylistAsync()
     {
+        var topLevel = GetTopLevel(this);
+        if (topLevel == null)
+        {
+            Console.WriteLine("LoadPlaylist Error: top level is null");
+            return;
+        }
+
         AppSettings s = _settings.Load();
-        if (s.LastOpenedFolder == null)
+        IStorageFolder? folder = null;
+
+        if (!string.IsNullOrWhiteSpace(s.LastOpenedFolderPath))
         {
-            var topLevel = GetTopLevel(this);
-            if (topLevel == null)
-            {
-                Console.WriteLine("LoadPlaylist Error: top level is null");
-                return;
-            }
+            folder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(
+                new Uri(s.LastOpenedFolderPath));
+        }
+
+        if (folder == null)
+        {
             string exePath = AppDomain.CurrentDomain.BaseDirectory;
-            Uri folderUri = new(exePath);
-            IStorageFolder? appFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(folderUri);
-           if (appFolder == null) 
-           {
-                Console.WriteLine("Error: LastOpenedFolder is empty and could not access current folder.");
+            folder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(exePath));
+            if (folder == null)
+            {
+                Console.WriteLine("Error: could not resolve a music folder.");
                 return;
             }
-            s.LastOpenedFolder = appFolder;
         }
-        await foreach(var item in s.LastOpenedFolder.GetItemsAsync())
+
+        Playlist.Clear();
+        await foreach (var item in folder.GetItemsAsync())
         {
-            if (item is IStorageFile file)
+            if (item is IStorageFile file &&
+                file.Name.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
             {
-                if (file.Name.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
+                Playlist.Add(new SongFile
                 {
-                    await using var stream = await file.OpenReadAsync();
-                    using var reader = new StreamReader(stream);
-                    string content = await reader.ReadToEndAsync();
-                    SongFile newSong = new()
-                    {
-                        Name = file.Name,
-                        Path = file.Path
-                    };
-                    SongList.Add(newSong);
-                }
+                    Name = file.Name,
+                    Path = file.Path
+                });
             }
         }
-        Playlist.Clear();
-        foreach (var song in SongList)
-            Playlist.Add(song);
     }
 
     private void OnPlaylistSongClick()
@@ -121,25 +125,24 @@ public partial class MainWindow : Window
 
     public async void OnOpenFolderButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        // 1. open file browser
-        // 2. check if selected folder is valid
-        // 3. save selected folder to s.LastOpenedFolder
-        // 4. LoadPlaylist();
         var topLevel = GetTopLevel(this);
         if (topLevel == null)
         {
             Console.WriteLine("OnOpenFolderButtonClick Error: top level is null");
             return;
         }
+
         var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
             Title = "Select Folder",
             AllowMultiple = false
         });
         if (folders.Count <= 0) return;
+
         AppSettings s = _settings.Load();
-        s.LastOpenedFolder = folders[0];
-        SongList.Clear();
-        LoadPlaylist();
+        s.LastOpenedFolderPath = folders[0].Path.AbsoluteUri;
+        _settings.Save(s);
+
+        await LoadPlaylistAsync();
     }
 }
