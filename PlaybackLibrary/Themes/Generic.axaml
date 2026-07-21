@@ -23,9 +23,9 @@
                                 VerticalAlignment="Center"
                             />
                             <Button
+                                x:Name="PART_PlayButton"
                                 Content="="
-                                Click="Play"
-                                HorizontalAlignment="Center" 
+                                HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                             />
                             <Button
@@ -40,7 +40,6 @@
                             />
                         </StackPanel>
                     </StackPanel>
-                    
                 </Border>
             </ControlTemplate>
         </Setter>

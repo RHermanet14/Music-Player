@@ -116,11 +116,17 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnPlaylistSongClick()
+    private void OnPlaylistSongClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        //Get name of file
-        //send file name to media player
-        // MediaPlayer.SetSong(s.LastOpenedSong);
+        if (sender is not Button { DataContext: SongFile song })
+            return;
+
+        string path = song.Path.IsFile ? song.Path.LocalPath : song.Path.AbsoluteUri;
+        Player.LoadAndPlay(path);
+
+        AppSettings s = _settings.Load();
+        s.LastOpenedFile = path;
+        _settings.Save(s);
     }
 
     public async void OnOpenFolderButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

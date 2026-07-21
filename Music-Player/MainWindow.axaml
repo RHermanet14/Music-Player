@@ -21,7 +21,7 @@
             </Grid>
         </Border>
         <Grid Grid.Column="1" RowDefinitions="*, 75">
-            <controls:MediaPlayer Grid.Row="1"/>
+            <controls:MediaPlayer x:Name="Player" Grid.Row="1"/>
         </Grid>
         <StackPanel Grid.Column="2">
             <ItemsControl ItemsSource="{Binding Playlist}">
@@ -33,7 +33,7 @@
 
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="local:SongFile">
-                        <Button Content="{Binding Name}" Padding="12,6"/>
+                        <Button Content="{Binding Name}" Padding="12,6" Click="OnPlaylistSongClick"/>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
