@@ -23,7 +23,8 @@
         <Grid Grid.Column="1" RowDefinitions="*, 75">
             <controls:MediaPlayer x:Name="Player" Grid.Row="1"/>
         </Grid>
-        <StackPanel Grid.Column="2">
+        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
             <ItemsControl ItemsSource="{Binding Playlist}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -38,5 +39,7 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </StackPanel>
+        </ScrollViewer>
+        
     </Grid>
 </Window>
