@@ -14,9 +14,9 @@ public class MediaPlayer : TemplatedControl
     private bool _isPaused = true;
 
     public static readonly StyledProperty<string> TextProperty =
-        AvaloniaProperty.Register<MediaPlayer, string>(nameof(Text));
+        AvaloniaProperty.Register<MediaPlayer, string>(nameof(File), defaultValue:"[]");
 
-    public string Text
+    public string File
     {
         get => GetValue(TextProperty);
         set => SetValue(TextProperty, value);
@@ -24,6 +24,7 @@ public class MediaPlayer : TemplatedControl
 
     public void LoadAndPlay(string fileName)
     {
+        File = fileName;
         _song.Load(fileName);
         _song.Play();
         _isPaused = false;

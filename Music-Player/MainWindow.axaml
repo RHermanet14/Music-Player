@@ -3,13 +3,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="600"
-        Width="1024" Height="600"
+        Width="1500" Height="600"
         x:Class="Music_Player.MainWindow"
         Title="Music_Player"
         xmlns:controls="using:PlaybackLibrary"
         xmlns:local="using:Music_Player"
         x:DataType="local:MainWindow">
-    <Grid Background="{DynamicResource PrimaryBackground}" ColumnDefinitions="200, *, 200">
+    <Grid Background="{DynamicResource PrimaryBackground}" ColumnDefinitions="200, *, 400">
         <Border Padding="20" Background="{DynamicResource PrimaryBackgroundGradient}">
             <Grid RowDefinitions="*, Auto">
                 <StackPanel Spacing="12">
@@ -20,25 +20,26 @@
                 <Button Grid.Row="1" Content="Settings"></Button>
             </Grid>
         </Border>
-        <Grid Grid.Column="1" RowDefinitions="*, 75">
+        <Grid Grid.Column="1" RowDefinitions="*, Auto, 75">
+            <TextBox Grid.Row="1" Text="{Binding CurrentSongName}" IsReadOnly="True" Margin="8,4"/>
             <controls:MediaPlayer x:Name="Player" Grid.Row="1"/>
         </Grid>
-        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="{DynamicResource PrimaryForeground}">
             <StackPanel>
-            <ItemsControl ItemsSource="{Binding Playlist}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal" ItemSpacing="8"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
+                <ItemsControl ItemsSource="{Binding Playlist}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Vertical" ItemSpacing="8"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
 
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="local:SongFile">
-                        <Button Content="{Binding Name}" Padding="12,6" Click="OnPlaylistSongClick"/>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </StackPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="local:SongFile">
+                            <Button Content="{Binding Name}" Padding="12,6" Click="OnPlaylistSongClick"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
         </ScrollViewer>
         
     </Grid>

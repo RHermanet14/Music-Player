@@ -5,6 +5,8 @@ using System.IO;
 using System;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Music_Player;
 
@@ -63,6 +65,21 @@ public partial class MainWindow : Window
 {
     private readonly SettingsService _settings;
     public ObservableCollection<SongFile> Playlist { get; } = [];
+    public string _currentSongName = "";
+    public string CurrentSongName
+    {
+        get => _currentSongName;
+        set
+        {
+            if(_currentSongName == value) return;
+            _currentSongName = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnPropertyChanged([CallerMemberName] string? name = null) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
     public MainWindow()
     {
@@ -123,6 +140,7 @@ public partial class MainWindow : Window
 
         string path = song.Path.IsFile ? song.Path.LocalPath : song.Path.AbsoluteUri;
         Player.LoadAndPlay(path);
+        CurrentSongName = song.Name;
 
         AppSettings s = _settings.Load();
         s.LastOpenedFile = path;
