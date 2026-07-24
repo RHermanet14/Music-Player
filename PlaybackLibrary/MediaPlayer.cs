@@ -13,18 +13,18 @@ public class MediaPlayer : TemplatedControl
     private Button? _playButton;
     private bool _isPaused = true;
 
-    public static readonly StyledProperty<string> TextProperty =
-        AvaloniaProperty.Register<MediaPlayer, string>(nameof(File), defaultValue:"[]");
+    public static readonly StyledProperty<string> FileProperty =
+        AvaloniaProperty.Register<MediaPlayer, string>(nameof(File), defaultValue: "");
 
     public string File
     {
-        get => GetValue(TextProperty);
-        set => SetValue(TextProperty, value);
+        get => GetValue(FileProperty);
+        set => SetValue(FileProperty, value);
     }
 
     public void LoadAndPlay(string fileName)
     {
-        File = fileName;
+        File = System.IO.Path.GetFileName(fileName);
         _song.Load(fileName);
         _song.Play();
         _isPaused = false;

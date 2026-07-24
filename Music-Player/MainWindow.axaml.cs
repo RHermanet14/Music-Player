@@ -5,8 +5,6 @@ using System.IO;
 using System;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 namespace Music_Player;
 
@@ -73,14 +71,8 @@ public partial class MainWindow : Window
         {
             if(_currentSongName == value) return;
             _currentSongName = value;
-            OnPropertyChanged();
         }
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-    private void OnPropertyChanged([CallerMemberName] string? name = null) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
     public MainWindow()
     {
         InitializeComponent();

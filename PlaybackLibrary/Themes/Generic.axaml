@@ -1,17 +1,16 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="using:PlaybackLibrary"
-        x:Class="PlaybackLibrary.Themes.Generic"
-        x:DataType="local:MediaPlayer">
+        x:Class="PlaybackLibrary.Themes.Generic">
 
     <Style Selector="local|MediaPlayer">
         <Setter Property="Template">
             <ControlTemplate>
                 <Border Background="#303030" CornerRadius="4" Padding="10">
                     <StackPanel>
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">
-                            --------0-------
-                        </TextBlock>
+                        <TextBlock Text="{TemplateBinding File}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Button
                                 Content="&lt;&lt;"
