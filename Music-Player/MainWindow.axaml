@@ -20,8 +20,10 @@
                 <Button Grid.Row="1" Content="Settings"></Button>
             </Grid>
         </Border>
-        <Grid Grid.Column="1" RowDefinitions="*, Auto, 75">
-            <TextBox Grid.Row="1" Text="{Binding CurrentSongName}" IsReadOnly="True" Margin="8,4"/>
+        <Grid Grid.Column="1" RowDefinitions="*, 75">
+            <Grid Grid.Row="0">
+                <TextBlock>Grid like selection, right side will be the current playlist</TextBlock>
+            </Grid>
             <controls:MediaPlayer x:Name="Player" Grid.Row="1"/>
         </Grid>
         <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="{DynamicResource PrimaryForeground}">
