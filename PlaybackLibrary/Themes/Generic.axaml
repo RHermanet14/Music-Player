@@ -8,37 +8,40 @@
             <ControlTemplate>
                 <Border Background="#303030" CornerRadius="4" Padding="10">
                     <StackPanel>
-                        <TextBlock Text="{TemplateBinding File}"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Button
-                                Content="&lt;&lt;"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                            />
-                            <Button
-                                Content="&lt;"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                            />
-                            <Button
-                                x:Name="PART_PlayButton"
-                                Content="="
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                            />
-                            <Button
-                                Content="&gt;"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                            />
-                            <Button
-                                Content="&gt;&gt;"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                            />
-                        </StackPanel>
+                        <TextBlock Text="{TemplateBinding File}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Content="&gt;" VerticalAlignment="Center"/>
+                            <Button DockPanel.Dock="Right" Content="&lt;" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Button
+                                    Content="&lt;&lt;"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                />
+                                <Button
+                                    Content="&lt;"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                />
+                                <Button
+                                    x:Name="PART_PlayButton"
+                                    Content="="
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                />
+                                <Button
+                                    Content="&gt;"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                />
+                                <Button
+                                    Content="&gt;&gt;"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                />
+                            </StackPanel>
+                        </DockPanel>
+                        
                     </StackPanel>
                 </Border>
             </ControlTemplate>
