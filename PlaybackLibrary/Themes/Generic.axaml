@@ -10,8 +10,23 @@
                     <StackPanel>
                         <TextBlock Text="{TemplateBinding File}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         <DockPanel>
-                            <Button DockPanel.Dock="Left" Content="&gt;" VerticalAlignment="Center"/>
-                            <Button DockPanel.Dock="Right" Content="&lt;" VerticalAlignment="Center"/>
+                            <DockPanel.Styles>
+                                <Style Selector="ToggleButton#LeftCollapse">
+                                    <Setter Property="Content" Value="&gt;"/>
+                                </Style>
+                                <Style Selector="ToggleButton#LeftCollapse:checked">
+                                    <Setter Property="Content" Value="&lt;"/>
+                                </Style>
+
+                                <Style Selector="ToggleButton#RightCollapse">
+                                    <Setter Property="Content" Value="&lt;"/>
+                                </Style>
+                                <Style Selector="ToggleButton#RightCollapse:checked">
+                                    <Setter Property="Content" Value="&gt;"/>
+                                </Style>
+                            </DockPanel.Styles>
+                            <ToggleButton x:Name="LeftCollapse" DockPanel.Dock="Left" VerticalAlignment="Center"/>
+                            <ToggleButton x:Name="RightCollapse" DockPanel.Dock="Right" VerticalAlignment="Center"/>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Button
                                     Content="&lt;&lt;"
