@@ -16,6 +16,22 @@ public class MediaPlayer : TemplatedControl
     public static readonly StyledProperty<string> FileProperty =
         AvaloniaProperty.Register<MediaPlayer, string>(nameof(File), defaultValue: "");
 
+    public static readonly StyledProperty<bool> IsLeftCollapsedProperty =
+        AvaloniaProperty.Register<MediaPlayer, bool>(nameof(IsLeftCollapsed));
+    public bool IsLeftCollapsed
+    {
+        get => GetValue(IsLeftCollapsedProperty);
+        set => SetValue(IsLeftCollapsedProperty, value);
+    }
+
+    public static readonly StyledProperty<bool> IsRightCollapsedProperty =
+        AvaloniaProperty.Register<MediaPlayer, bool>(nameof(IsRightCollapsed));
+    public bool IsRightCollapsed
+    {
+        get => GetValue(IsRightCollapsedProperty);
+        set => SetValue(IsRightCollapsedProperty, value);
+    }
+
     public string File
     {
         get => GetValue(FileProperty);

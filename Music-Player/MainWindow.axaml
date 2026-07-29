@@ -10,7 +10,7 @@
         xmlns:local="using:Music_Player"
         x:DataType="local:MainWindow">
     <Grid Background="{DynamicResource PrimaryBackground}" ColumnDefinitions="200, *, 400">
-        <Border Padding="20" Background="{DynamicResource PrimaryBackgroundGradient}">
+        <Border Padding="20" Background="{DynamicResource PrimaryBackgroundGradient}" IsVisible="{Binding !#Player.IsLeftCollapsed}">
             <Grid RowDefinitions="*, Auto">
                 <StackPanel Spacing="12">
                     <Button Content="Open Folder" HorizontalAlignment="Stretch" Click="OnOpenFolderButtonClick"></Button>
@@ -38,7 +38,7 @@
             </ScrollViewer>
             <controls:MediaPlayer x:Name="Player" Grid.Row="1"/>
         </Grid>
-        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="{DynamicResource PrimaryForeground}">
+        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="{DynamicResource PrimaryForeground}" IsVisible="{Binding !#Player.IsRightCollapsed}">
             <StackPanel>
                 <ItemsControl ItemsSource="{Binding Playlist}">
                     <ItemsControl.ItemsPanel>

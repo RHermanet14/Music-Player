@@ -11,22 +11,22 @@
                         <TextBlock Text="{TemplateBinding File}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         <DockPanel>
                             <DockPanel.Styles>
-                                <Style Selector="ToggleButton#LeftCollapse">
+                                <Style Selector="ToggleButton#PART_LeftCollapse">
                                     <Setter Property="Content" Value="&gt;"/>
                                 </Style>
-                                <Style Selector="ToggleButton#LeftCollapse:checked">
+                                <Style Selector="ToggleButton#PART_LeftCollapse:checked">
                                     <Setter Property="Content" Value="&lt;"/>
                                 </Style>
 
-                                <Style Selector="ToggleButton#RightCollapse">
+                                <Style Selector="ToggleButton#PART_RightCollapse">
                                     <Setter Property="Content" Value="&lt;"/>
                                 </Style>
-                                <Style Selector="ToggleButton#RightCollapse:checked">
+                                <Style Selector="ToggleButton#PART_RightCollapse:checked">
                                     <Setter Property="Content" Value="&gt;"/>
                                 </Style>
                             </DockPanel.Styles>
-                            <ToggleButton x:Name="LeftCollapse" DockPanel.Dock="Left" VerticalAlignment="Center"/>
-                            <ToggleButton x:Name="RightCollapse" DockPanel.Dock="Right" VerticalAlignment="Center"/>
+                            <ToggleButton x:Name="PART_LeftCollapse" DockPanel.Dock="Left" VerticalAlignment="Center" IsChecked="{TemplateBinding IsLeftCollapsed, Mode=TwoWay}"/>
+                            <ToggleButton x:Name="PART_RightCollapse" DockPanel.Dock="Right" VerticalAlignment="Center" IsChecked="{TemplateBinding IsRightCollapsed, Mode=TwoWay}"/>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Button
                                     Content="&lt;&lt;"
