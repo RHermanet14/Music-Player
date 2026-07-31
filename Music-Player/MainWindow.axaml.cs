@@ -5,6 +5,7 @@ using System.IO;
 using System;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
+using System.Linq;
 
 namespace Music_Player;
 
@@ -59,11 +60,27 @@ public class SongFile
     public Uri Path { get; set; } = new Uri("about:blank");
 }
 
+public static class ObservableCollectionExtension
+{
+    private static void Shuffle<T>(this ObservableCollection<T> list)
+    {
+        Random rng = new();
+        int n = list.Count;
+        while (n > 1)
+        {
+            n--;
+            int k = rng.Next(n+1);
+            (list[n], list[k]) = (list[k], list[n]);
+        }
+    }
+}
+
 public partial class MainWindow : Window
 {
     private readonly SettingsService _settings;
     public ObservableCollection<SongFile> Playlist { get; } = [];
     public string _currentSongName = "";
+    private bool IsShuffled = false;
     public string CurrentSongName
     {
         get => _currentSongName;
@@ -123,6 +140,7 @@ public partial class MainWindow : Window
                 });
             }
         }
+        if (IsShuffled) _ = Playlist.Shuffle();
     }
 
     private void OnPlaylistSongClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
