@@ -179,4 +179,10 @@ public partial class MainWindow : Window
 
         await LoadPlaylistAsync();
     }
+
+    public async void ShuffleClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        IsShuffled = !IsShuffled;
+        await LoadPlaylistAsync();
+    }
 }

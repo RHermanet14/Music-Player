@@ -41,28 +41,30 @@
             </ScrollViewer>
             <controls:MediaPlayer x:Name="Player" Grid.Row="1"/>
         </Grid>
-        <ScrollViewer Grid.Column="2"
-                VerticalScrollBarVisibility="Auto"
-                HorizontalScrollBarVisibility="Auto"
-                Background="{DynamicResource PrimaryForeground}"
-                IsVisible="{Binding !#Player.IsRightCollapsed}"
-                Width="400">
-            <StackPanel>
-                <ItemsControl ItemsSource="{Binding Playlist}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Vertical" ItemSpacing="8"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="local:SongFile">
-                            <Button Content="{Binding Name}" Padding="12,6" Click="OnPlaylistSongClick"/>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-        </ScrollViewer>
+        <DockPanel Grid.Column="2">
+            <ToggleButton DockPanel.Dock="Bottom" Height="40" Click="ShuffleClick" HorizontalAlignment="Center" VerticalAlignment="Center" Content="🔀" Background="#303030"/>
+            <ScrollViewer
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Auto"
+                    Background="{DynamicResource PrimaryForeground}"
+                    IsVisible="{Binding !#Player.IsRightCollapsed}"
+                    Width="400">
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding Playlist}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Vertical" ItemSpacing="8"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="local:SongFile">
+                                <Button Content="{Binding Name}" Padding="12,6" Click="OnPlaylistSongClick"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
         
     </Grid>
 </Window>
