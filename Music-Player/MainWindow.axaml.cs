@@ -62,7 +62,7 @@ public class SongFile
 
 public static class ObservableCollectionExtension
 {
-    private static void Shuffle<T>(this ObservableCollection<T> list)
+    public static void Shuffle<T>(this ObservableCollection<T> list)
     {
         Random rng = new();
         int n = list.Count;
@@ -140,7 +140,7 @@ public partial class MainWindow : Window
                 });
             }
         }
-        if (IsShuffled) _ = Playlist.Shuffle();
+        if (IsShuffled) Playlist.Shuffle();
     }
 
     private void OnPlaylistSongClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
