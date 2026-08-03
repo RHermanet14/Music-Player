@@ -7,7 +7,6 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="Styles/AppDefaultStyles.axaml"></StyleInclude>
-        <StyleInclude Source="avares://PlaybackLibrary/Themes/Generic.axaml"/>
     </Application.Styles>
 
     <Application.Resources>

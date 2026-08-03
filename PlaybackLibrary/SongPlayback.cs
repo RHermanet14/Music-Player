@@ -1,12 +1,13 @@
 namespace PlaybackLibrary;
-internal interface ISongPlayback : IDisposable
+
+public interface ISongPlayback : IDisposable
 {
     void Load(string fileName);
     void Play();
     void Pause();
 }
 
-internal static class SongPlayback
+public static class SongPlayback
 {
     public static ISongPlayback Create()
     {
@@ -19,7 +20,7 @@ internal static class SongPlayback
 }
 
 #if WINDOWS
-internal sealed class WindowsSongPlayback : ISongPlayback
+file sealed class WindowsSongPlayback : ISongPlayback
 {
     private Windows.Media.Playback.MediaPlayer? _player;
 
@@ -46,7 +47,7 @@ internal sealed class WindowsSongPlayback : ISongPlayback
     }
 }
 #else
-internal sealed class StubSongPlayback : ISongPlayback
+file sealed class StubSongPlayback : ISongPlayback
 {
     public void Load(string fileName) =>
         Console.WriteLine($"Load: Linux version WOP");

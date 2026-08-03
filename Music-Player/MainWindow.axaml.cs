@@ -6,6 +6,7 @@ using System;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using System.Linq;
+using PlaybackLibrary;
 
 namespace Music_Player;
 
@@ -78,19 +79,12 @@ public static class ObservableCollectionExtension
 public partial class MainWindow : Window
 {
     private readonly SettingsService _settings;
+    private readonly ISongPlayback _song = SongPlayback.Create();
+    private bool _isPaused = true;
     public ObservableCollection<SongFile> OriginalPlaylist { get; } = [];
     public ObservableCollection<SongFile> Playlist { get; } = [];
-    public string _currentSongName = "";
     private bool IsShuffled = false;
-    public string CurrentSongName
-    {
-        get => _currentSongName;
-        set
-        {
-            if(_currentSongName == value) return;
-            _currentSongName = value;
-        }
-    }
+
     public MainWindow()
     {
         InitializeComponent();
@@ -98,6 +92,25 @@ public partial class MainWindow : Window
         _settings = new SettingsService();
         _ = LoadPlaylistAsync();
     }
+
+    #region media playback functions
+    public void LoadAndPlay(string fileName)
+    {
+        CurrentSongLabel.Text = Path.GetFileName(fileName);
+        _song.Load(fileName);
+        _song.Play();
+        _isPaused = false;
+    }
+
+    private void OnPlayButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        _isPaused = !_isPaused;
+        if (_isPaused)
+            _song.Pause();
+        else
+            _song.Play();
+    }
+    #endregion
 
     private async Task LoadPlaylistAsync()
     {
@@ -155,8 +168,7 @@ public partial class MainWindow : Window
             return;
 
         string path = song.Path.IsFile ? song.Path.LocalPath : song.Path.AbsoluteUri;
-        Player.LoadAndPlay(path);
-        CurrentSongName = song.Name;
+        LoadAndPlay(path);
 
         AppSettings s = _settings.Load();
         s.LastOpenedFile = path;

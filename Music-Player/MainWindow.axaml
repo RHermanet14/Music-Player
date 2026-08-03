@@ -6,13 +6,12 @@
         Width="1500" Height="600"
         x:Class="Music_Player.MainWindow"
         Title="Music_Player"
-        xmlns:controls="using:PlaybackLibrary"
         xmlns:local="using:Music_Player"
         x:DataType="local:MainWindow">
     <Grid Background="{DynamicResource PrimaryBackground}" ColumnDefinitions="Auto, *, Auto">
         <Border Padding="20"
                 Background="{DynamicResource PrimaryBackgroundGradient}"
-                IsVisible="{Binding !#Player.IsLeftCollapsed}"
+                IsVisible="{Binding !#LeftCollapse.IsChecked}"
                 Width="200">
             <Grid RowDefinitions="*, Auto">
                 <StackPanel Spacing="12">
@@ -39,9 +38,60 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
-            <controls:MediaPlayer x:Name="Player" Grid.Row="1"/>
+            <Border Grid.Row="1" Background="#303030" CornerRadius="4" Padding="10">
+                <StackPanel>
+                    <TextBlock x:Name="CurrentSongLabel" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <DockPanel>
+                        <DockPanel.Styles>
+                            <Style Selector="ToggleButton#LeftCollapse">
+                                <Setter Property="Content" Value="&gt;"/>
+                            </Style>
+                            <Style Selector="ToggleButton#LeftCollapse:checked">
+                                <Setter Property="Content" Value="&lt;"/>
+                            </Style>
+
+                            <Style Selector="ToggleButton#RightCollapse">
+                                <Setter Property="Content" Value="&lt;"/>
+                            </Style>
+                            <Style Selector="ToggleButton#RightCollapse:checked">
+                                <Setter Property="Content" Value="&gt;"/>
+                            </Style>
+                        </DockPanel.Styles>
+                        <ToggleButton x:Name="LeftCollapse" DockPanel.Dock="Left" VerticalAlignment="Center"/>
+                        <ToggleButton x:Name="RightCollapse" DockPanel.Dock="Right" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Button
+                                Content="&lt;&lt;"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                            />
+                            <Button
+                                Content="&lt;"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                            />
+                            <Button
+                                Content="="
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Click="OnPlayButtonClick"
+                            />
+                            <Button
+                                Content="&gt;"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                            />
+                            <Button
+                                Content="&gt;&gt;"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                            />
+                        </StackPanel>
+                    </DockPanel>
+                </StackPanel>
+            </Border>
         </Grid>
-        <DockPanel Grid.Column="2" IsVisible="{Binding !#Player.IsRightCollapsed}">
+        <DockPanel Grid.Column="2" IsVisible="{Binding !#RightCollapse.IsChecked}">
             <ToggleButton DockPanel.Dock="Bottom" Height="40" Click="ShuffleClick" HorizontalAlignment="Center" VerticalAlignment="Center" Content="🔀" Background="#303030"/>
             <ScrollViewer
                     VerticalScrollBarVisibility="Auto"
