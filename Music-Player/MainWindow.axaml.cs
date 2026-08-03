@@ -78,6 +78,7 @@ public static class ObservableCollectionExtension
 public partial class MainWindow : Window
 {
     private readonly SettingsService _settings;
+    public ObservableCollection<SongFile> OriginalPlaylist { get; } = [];
     public ObservableCollection<SongFile> Playlist { get; } = [];
     public string _currentSongName = "";
     private bool IsShuffled = false;
@@ -126,13 +127,18 @@ public partial class MainWindow : Window
                 return;
             }
         }
-
+        OriginalPlaylist.Clear();
         Playlist.Clear();
         await foreach (var item in folder.GetItemsAsync())
         {
             if (item is IStorageFile file &&
                 file.Name.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
             {
+                OriginalPlaylist.Add(new SongFile
+                {
+                    Name = file.Name,
+                    Path = file.Path
+                });
                 Playlist.Add(new SongFile
                 {
                     Name = file.Name,
