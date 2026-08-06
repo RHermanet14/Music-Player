@@ -1,3 +1,4 @@
+using Windows.Media.Core;
 using Windows.Media.Playback;
 
 namespace PlaybackLibrary;
@@ -27,15 +28,15 @@ public static class SongPlayback
 file sealed class WindowsSongPlayback : ISongPlayback
 {
     private MediaPlayer? _player;
-    private MediaPlaybackList? _playbackList;
+    private MediaPlaybackList _playbackList;
 
     private MediaPlayer Player =>
         _player ??= new MediaPlayer();
 
     public void Load(string fileName)
-    {
+    { // switch to accessing index of _playbackList
         var uri = new Uri(Path.GetFullPath(fileName));
-        Player.Source = Windows.Media.Core.MediaSource.CreateFromUri(uri);
+        Player.Source = MediaSource.CreateFromUri(uri);
     }
 
     public void Play() => Player.Play();
@@ -44,12 +45,14 @@ file sealed class WindowsSongPlayback : ISongPlayback
 
     public void AddToPlaylist(Uri path)
     {
-        
+        MediaSource mediaSource = MediaSource.CreateFromUri(path); // possibly need to get full path
+        MediaPlaybackItem playbackItem = new(mediaSource);
+        _playbackList.Items.Add(playbackItem);
     }
 
     public void ClearPlaylist()
     {
-        
+        _playbackList.Items.Clear();
     }
 
     public void Dispose()

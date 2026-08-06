@@ -157,6 +157,7 @@ public partial class MainWindow : Window
                     Name = file.Name,
                     Path = file.Path
                 });
+                _song.AddToPlaylist(file.Path);
             }
         }
         if (IsShuffled) Playlist.Shuffle();
