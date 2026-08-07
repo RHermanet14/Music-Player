@@ -5,7 +5,7 @@ namespace PlaybackLibrary;
 
 public interface ISongPlayback : IDisposable
 {
-    void Load(string fileName);
+    void Load(int playlistIndex);
     void Play();
     void Pause();
     void AddToPlaylist(Uri path);
@@ -33,10 +33,9 @@ file sealed class WindowsSongPlayback : ISongPlayback
     private MediaPlayer Player =>
         _player ??= new MediaPlayer();
 
-    public void Load(string fileName)
-    { // switch to accessing index of _playbackList
-        var uri = new Uri(Path.GetFullPath(fileName));
-        Player.Source = MediaSource.CreateFromUri(uri);
+    public void Load(int playlistIndex)
+    {
+        Player.Source = _playbackList.Items[playlistIndex];
     }
 
     public void Play() => Player.Play();
@@ -67,7 +66,7 @@ file sealed class WindowsSongPlayback : ISongPlayback
 #else
 file sealed class StubSongPlayback : ISongPlayback
 {
-    public void Load(string fileName) =>
+    public void Load(int playlistIndex) =>
         Console.WriteLine($"Load: Linux version WOP");
 
     public void Play() => Console.WriteLine("Play: Linux version WOP");

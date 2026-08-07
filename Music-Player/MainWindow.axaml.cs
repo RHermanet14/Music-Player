@@ -14,7 +14,6 @@ namespace Music_Player;
 public class AppSettings
 {
     public string LastOpenedFolderPath { get; set; } = "";
-    public string LastOpenedFile { get; set; } = "";
 }
 
 public class SettingsService
@@ -59,6 +58,7 @@ public class SongFile
 {
     public string Name { get; set; } = "";
     public Uri Path { get; set; } = new Uri("about:blank");
+    public int Index;
 }
 
 public static class ObservableCollectionExtension
@@ -94,10 +94,10 @@ public partial class MainWindow : Window
     }
 
     #region media playback functions
-    public void LoadAndPlay(string fileName)
+    public void LoadAndPlay(SongFile file)
     {
-        CurrentSongLabel.Text = Path.GetFileName(fileName);
-        _song.Load(fileName);
+        CurrentSongLabel.Text = Path.GetFileName(file.Name);
+        _song.Load(file.Index);
         _song.Play();
         _isPaused = false;
     }
@@ -168,11 +168,9 @@ public partial class MainWindow : Window
         if (sender is not Button { DataContext: SongFile song })
             return;
 
-        string path = song.Path.IsFile ? song.Path.LocalPath : song.Path.AbsoluteUri;
-        LoadAndPlay(path);
+        LoadAndPlay(song);
 
         AppSettings s = _settings.Load();
-        s.LastOpenedFile = path;
         _settings.Save(s);
     }
 
