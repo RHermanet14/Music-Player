@@ -28,15 +28,18 @@ public static class SongPlayback
 file sealed class WindowsSongPlayback : ISongPlayback
 {
     private MediaPlayer? _player;
-    private MediaPlaybackList _playbackList = new();
+    private readonly MediaPlaybackList _playbackList = new();
 
     private MediaPlayer Player =>
         _player ??= new MediaPlayer();
 
     public void Load(int playlistIndex)
     {
+        if (playlistIndex < 0 || playlistIndex >= _playbackList.Items.Count)
+            return;
+        Player.Source = null;
+        _playbackList.StartingItem = _playbackList.Items[playlistIndex];
         Player.Source = _playbackList;
-        _playbackList.MoveTo((uint)playlistIndex);
     }
 
     public void Play() => Player.Play();
@@ -45,14 +48,19 @@ file sealed class WindowsSongPlayback : ISongPlayback
 
     public void AddToPlaylist(Uri path)
     {
-        MediaSource mediaSource = MediaSource.CreateFromUri(path); // possibly need to get full path
-        MediaPlaybackItem playbackItem = new(mediaSource);
-        _playbackList.Items.Add(playbackItem);
+        Uri sourceUri = path.IsFile
+            ? new Uri(Path.GetFullPath(path.LocalPath))
+            : path;
+        MediaSource mediaSource = MediaSource.CreateFromUri(sourceUri);
+        _playbackList.Items.Add(new MediaPlaybackItem(mediaSource));
     }
 
     public void ClearPlaylist()
     {
+        if (_player is not null)
+            _player.Source = null;
         _playbackList.Items.Clear();
+        _playbackList.StartingItem = null;
     }
 
     public void Dispose()

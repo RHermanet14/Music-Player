@@ -58,7 +58,7 @@ public class SongFile
 {
     public string Name { get; set; } = "";
     public Uri Path { get; set; } = new Uri("about:blank");
-    public int Index;
+    public int Index { get; set; }
 }
 
 public static class ObservableCollectionExtension

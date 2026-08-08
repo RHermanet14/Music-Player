@@ -102,7 +102,7 @@
                     <ItemsControl ItemsSource="{Binding Playlist}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Vertical" ItemSpacing="8"/>
+                                <StackPanel Spacing="8"/>
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
