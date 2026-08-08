@@ -142,6 +142,8 @@ public partial class MainWindow : Window
         }
         OriginalPlaylist.Clear();
         Playlist.Clear();
+        _song.ClearPlaylist();
+        int songIndex = 0;
         await foreach (var item in folder.GetItemsAsync())
         {
             if (item is IStorageFile file &&
@@ -150,14 +152,17 @@ public partial class MainWindow : Window
                 OriginalPlaylist.Add(new SongFile
                 {
                     Name = file.Name,
-                    Path = file.Path
+                    Path = file.Path,
+                    Index = songIndex
                 });
                 Playlist.Add(new SongFile
                 {
                     Name = file.Name,
-                    Path = file.Path
+                    Path = file.Path,
+                    Index = songIndex
                 });
                 _song.AddToPlaylist(file.Path);
+                songIndex++;
             }
         }
         if (IsShuffled) Playlist.Shuffle();

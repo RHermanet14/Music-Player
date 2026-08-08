@@ -28,14 +28,15 @@ public static class SongPlayback
 file sealed class WindowsSongPlayback : ISongPlayback
 {
     private MediaPlayer? _player;
-    private MediaPlaybackList _playbackList;
+    private MediaPlaybackList _playbackList = new();
 
     private MediaPlayer Player =>
         _player ??= new MediaPlayer();
 
     public void Load(int playlistIndex)
     {
-        Player.Source = _playbackList.Items[playlistIndex];
+        Player.Source = _playbackList;
+        _playbackList.MoveTo((uint)playlistIndex);
     }
 
     public void Play() => Player.Play();
