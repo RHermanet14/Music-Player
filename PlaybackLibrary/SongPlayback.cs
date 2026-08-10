@@ -11,8 +11,7 @@ public interface ISongPlayback : IDisposable
     void AddToPlaylist(Uri path);
     void ClearPlaylist();
 }
-
-public static class SongPlayback
+ public static class SongPlayback
 {
     public static ISongPlayback Create()
     {
@@ -42,9 +41,15 @@ file sealed class WindowsSongPlayback : ISongPlayback
         Player.Source = _playbackList;
     }
 
-    public void Play() => Player.Play();
+    public void Play()
+    {
+        Player.Play();
+    }
 
-    public void Pause() => Player.Pause();
+    public void Pause()
+    {
+        Player.Pause();
+    }
 
     public void AddToPlaylist(Uri path)
     {
@@ -57,7 +62,7 @@ file sealed class WindowsSongPlayback : ISongPlayback
 
     public void ClearPlaylist()
     {
-        if (_player is not null)
+        if (_player != null)
             _player.Source = null;
         _playbackList.Items.Clear();
         _playbackList.StartingItem = null;
