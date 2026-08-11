@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using System.Linq;
 using PlaybackLibrary;
+using Avalonia.Data.Converters;
+using System.Globalization;
 
 namespace Music_Player;
 
@@ -14,6 +16,25 @@ namespace Music_Player;
 public class AppSettings
 {
     public string LastOpenedFolderPath { get; set; } = "";
+}
+
+public class SeekBarConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is double totalTime)
+        {
+            int numSeconds = (int)totalTime;
+            int numMinutes = (int)numSeconds / 60;
+            return $"{numMinutes}:{(numSeconds%60 > 10 ? numSeconds%60 : $"0{numSeconds%60}")}";
+        }
+        return value;
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        return value;
+    }
 }
 
 public class SettingsService
@@ -98,6 +119,7 @@ public partial class MainWindow : Window
     {
         CurrentSongLabel.Text = Path.GetFileName(file.Name);
         _song.Load(file.Index);
+        seekBarSlider.Value = 0;
         seekBarSlider.Maximum = await _song.Play();
         _isPaused = false;
     }

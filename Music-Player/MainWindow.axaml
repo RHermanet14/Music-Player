@@ -7,7 +7,11 @@
         x:Class="Music_Player.MainWindow"
         Title="Music_Player"
         xmlns:local="using:Music_Player"
-        x:DataType="local:MainWindow">
+        x:DataType="local:MainWindow"
+        xmlns:conv="using:Music_Player">
+    <Window.Resources>
+        <conv:SeekBarConverter x:Key="SeekTimeModifier"/>
+    </Window.Resources>
     <Grid Background="{DynamicResource PrimaryBackground}" ColumnDefinitions="Auto, *, Auto">
         <Border Padding="20"
                 Background="{DynamicResource PrimaryBackgroundGradient}"
@@ -89,7 +93,7 @@
                         </StackPanel>
                     </DockPanel>
                     <Slider x:Name="seekBarSlider" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True"/>
-                    <TextBlock Text="{Binding #seekBarSlider.Value}" HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="seekTime" Text="{Binding #seekBarSlider.Value, Converter={StaticResource SeekTimeModifier}}" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Border>
         </Grid>
