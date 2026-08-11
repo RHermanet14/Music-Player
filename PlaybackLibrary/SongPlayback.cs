@@ -1,3 +1,4 @@
+using Windows.Foundation;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 
@@ -6,7 +7,7 @@ namespace PlaybackLibrary;
 public interface ISongPlayback : IDisposable
 {
     void Load(int playlistIndex);
-    void Play();
+    Task<double> Play();
     void Pause();
     void AddToPlaylist(Uri path);
     void ClearPlaylist();
@@ -41,9 +42,19 @@ file sealed class WindowsSongPlayback : ISongPlayback
         Player.Source = _playbackList;
     }
 
-    public void Play()
+    public async Task<double> Play()
     {
+        var tcs = new TaskCompletionSource<double>();
+        void openedHandler(MediaPlayer sender, object args)
+        {
+            Player.MediaOpened -= openedHandler;
+            double seconds = Player.PlaybackSession.NaturalDuration.TotalSeconds;
+            tcs.SetResult(seconds);
+        }
+
+        Player.MediaOpened += openedHandler;
         Player.Play();
+        return await tcs.Task;
     }
 
     public void Pause()
@@ -83,7 +94,7 @@ file sealed class StubSongPlayback : ISongPlayback
     public void Load(int playlistIndex) =>
         Console.WriteLine($"Load: Linux version WOP");
 
-    public void Play() => Console.WriteLine("Play: Linux version WOP");
+    public Task<double> Play() => Console.WriteLine("Play: Linux version WOP");
 
     public void Pause() => Console.WriteLine("Pause: Linux version WOP");
 

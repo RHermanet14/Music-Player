@@ -94,11 +94,11 @@ public partial class MainWindow : Window
     }
 
     #region media playback functions
-    public void LoadAndPlay(SongFile file)
+    public async void LoadAndPlay(SongFile file)
     {
         CurrentSongLabel.Text = Path.GetFileName(file.Name);
         _song.Load(file.Index);
-        _song.Play();
+        seekBarSlider.Maximum = await _song.Play();
         _isPaused = false;
     }
 
