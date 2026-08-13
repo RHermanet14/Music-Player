@@ -9,6 +9,9 @@ using System.Linq;
 using PlaybackLibrary;
 using Avalonia.Data.Converters;
 using System.Globalization;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using Avalonia;
 
 namespace Music_Player;
 
@@ -97,7 +100,7 @@ public static class ObservableCollectionExtension
     }
 }
 
-public partial class MainWindow : Window
+public partial class MainWindow : Window, INotifyPropertyChanged
 {
     private readonly SettingsService _settings;
     private readonly ISongPlayback _song = SongPlayback.Create();
@@ -105,7 +108,13 @@ public partial class MainWindow : Window
     public ObservableCollection<SongFile> OriginalPlaylist { get; } = [];
     public ObservableCollection<SongFile> Playlist { get; } = [];
     private bool IsShuffled = false;
-
+    public static readonly StyledProperty<bool> IsSeekBarVisibleProperty =
+        AvaloniaProperty.Register<MainWindow, bool>(nameof(IsSeekBarVisible));
+    public bool IsSeekBarVisible
+    {
+        get => GetValue(IsSeekBarVisibleProperty);
+        set => SetValue(IsSeekBarVisibleProperty, value);
+    }
     public MainWindow()
     {
         InitializeComponent();
@@ -122,6 +131,7 @@ public partial class MainWindow : Window
         seekBarSlider.Value = 0;
         seekBarSlider.Maximum = await _song.Play();
         _isPaused = false;
+        IsSeekBarVisible = true;
     }
 
     private void OnPlayButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -165,6 +175,7 @@ public partial class MainWindow : Window
         OriginalPlaylist.Clear();
         Playlist.Clear();
         _song.ClearPlaylist();
+        IsSeekBarVisible = false;
         int songIndex = 0;
         await foreach (var item in folder.GetItemsAsync())
         {

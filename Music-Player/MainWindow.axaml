@@ -92,8 +92,8 @@
                             />
                         </StackPanel>
                     </DockPanel>
-                    <Slider x:Name="seekBarSlider" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True"/>
-                    <TextBlock x:Name="seekTime" Text="{Binding #seekBarSlider.Value, Converter={StaticResource SeekTimeModifier}}" HorizontalAlignment="Center"/>
+                    <Slider x:Name="seekBarSlider" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" IsVisible="{Binding IsSeekBarVisible}"/>
+                    <TextBlock x:Name="seekTime" Text="{Binding #seekBarSlider.Value, Converter={StaticResource SeekTimeModifier}}" HorizontalAlignment="Center" IsVisible="{Binding IsSeekBarVisible}"/>
                 </StackPanel>
             </Border>
         </Grid>
