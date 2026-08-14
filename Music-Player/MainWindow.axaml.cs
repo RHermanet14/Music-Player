@@ -12,6 +12,8 @@ using System.Globalization;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Avalonia;
+using Avalonia.Threading;
+using System.Threading;
 
 namespace Music_Player;
 
@@ -115,12 +117,21 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         get => GetValue(IsSeekBarVisibleProperty);
         set => SetValue(IsSeekBarVisibleProperty, value);
     }
+
+    public DispatcherTimer timer = new();
+
     public MainWindow()
     {
         InitializeComponent();
         DataContext = this;
         _settings = new SettingsService();
         _ = LoadPlaylistAsync();
+        timer.Interval = TimeSpan.FromSeconds(1);
+        timer.Tick += (sender, e) =>
+        {
+            if (!_isPaused)
+                seekBarSlider.Value += 1;
+        };
     }
 
     #region media playback functions
@@ -132,6 +143,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         seekBarSlider.Maximum = await _song.Play();
         _isPaused = false;
         IsSeekBarVisible = true;
+        timer.Stop();
+        timer.Start();
     }
 
     private void OnPlayButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
