@@ -10,10 +10,8 @@ using PlaybackLibrary;
 using Avalonia.Data.Converters;
 using System.Globalization;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Threading;
-using System.Threading;
 
 namespace Music_Player;
 
@@ -29,9 +27,9 @@ public class SeekBarConverter : IValueConverter
     {
         if (value is double totalTime)
         {
-            int numSeconds = (int)totalTime;
-            int numMinutes = (int)numSeconds / 60;
-            return $"{numMinutes}:{(numSeconds%60 > 10 ? numSeconds%60 : $"0{numSeconds%60}")}";
+            if (double.IsNaN(totalTime) || totalTime < 0) totalTime = 0;
+            TimeSpan elapsed = TimeSpan.FromSeconds(Math.Floor(totalTime));
+            return $"{(int)elapsed.TotalMinutes}:{elapsed.Seconds:00}";
         }
         return value;
     }
@@ -126,34 +124,49 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         DataContext = this;
         _settings = new SettingsService();
         _ = LoadPlaylistAsync();
-        timer.Interval = TimeSpan.FromSeconds(1);
-        timer.Tick += (sender, e) =>
-        {
-            if (!_isPaused)
-                seekBarSlider.Value += 1;
-        };
+        // Sub-second polling keeps the displayed time within ~a quarter second
+        // of the audio without the bar visibly stepping.
+        timer.Interval = TimeSpan.FromMilliseconds(250);
+        timer.Tick += (_, _) => UpdateSeekBar();
+    }
+
+    private void UpdateSeekBar()
+    {
+        double seconds = _song.Position.TotalSeconds;
+        if (double.IsNaN(seconds) || seconds < 0) seconds = 0;
+        if (seconds > seekBarSlider.Maximum) seconds = seekBarSlider.Maximum;
+        seekBarSlider.Value = seconds;
     }
 
     #region media playback functions
     public async void LoadAndPlay(SongFile file)
     {
+        timer.Stop();
         CurrentSongLabel.Text = Path.GetFileName(file.Name);
         _song.Load(file.Index);
         seekBarSlider.Value = 0;
         seekBarSlider.Maximum = await _song.Play();
         _isPaused = false;
         IsSeekBarVisible = true;
-        timer.Stop();
+        UpdateSeekBar();
         timer.Start();
     }
 
     private void OnPlayButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        _isPaused = !_isPaused;
         if (_isPaused)
-            _song.Pause();
+        {
+            _isPaused = false;
+            _song.Resume();
+            timer.Start();
+        }
         else
-            _song.Play();
+        {
+            _isPaused = true;
+            _song.Pause();
+            timer.Stop();
+        }
+        UpdateSeekBar();
     }
     #endregion
 
@@ -188,6 +201,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         OriginalPlaylist.Clear();
         Playlist.Clear();
         _song.ClearPlaylist();
+        timer.Stop();
+        _isPaused = true;
+        seekBarSlider.Value = 0;
         IsSeekBarVisible = false;
         int songIndex = 0;
         await foreach (var item in folder.GetItemsAsync())

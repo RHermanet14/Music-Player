@@ -6,8 +6,10 @@ namespace PlaybackLibrary;
 
 public interface ISongPlayback : IDisposable
 {
+    TimeSpan Position { get; }
     void Load(int playlistIndex);
     Task<double> Play();
+    void Resume();
     void Pause();
     void AddToPlaylist(Uri path);
     void ClearPlaylist();
@@ -33,6 +35,9 @@ file sealed class WindowsSongPlayback : ISongPlayback
     private MediaPlayer Player =>
         _player ??= new MediaPlayer();
 
+    public TimeSpan Position =>
+        _player?.PlaybackSession.Position ?? TimeSpan.Zero;
+
     public void Load(int playlistIndex)
     {
         if (playlistIndex < 0 || playlistIndex >= _playbackList.Items.Count)
@@ -56,6 +61,8 @@ file sealed class WindowsSongPlayback : ISongPlayback
         Player.Play();
         return await tcs.Task;
     }
+
+    public void Resume() => Player.Play();
 
     public void Pause()
     {
@@ -91,10 +98,18 @@ file sealed class WindowsSongPlayback : ISongPlayback
 #else
 file sealed class StubSongPlayback : ISongPlayback
 {
+    public TimeSpan Position => TimeSpan.Zero;
+
     public void Load(int playlistIndex) =>
         Console.WriteLine($"Load: Linux version WOP");
 
-    public Task<double> Play() => Console.WriteLine("Play: Linux version WOP");
+    public Task<double> Play()
+    {
+        Console.WriteLine("Play: Linux version WOP");
+        return Task.FromResult(0.0);
+    }
+
+    public void Resume() => Console.WriteLine("Resume: Linux version WOP");
 
     public void Pause() => Console.WriteLine("Pause: Linux version WOP");
 
