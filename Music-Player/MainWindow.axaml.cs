@@ -11,6 +11,8 @@ using Avalonia.Data.Converters;
 using System.Globalization;
 using System.ComponentModel;
 using Avalonia;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 
 namespace Music_Player;
@@ -117,6 +119,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     }
 
     public DispatcherTimer timer = new();
+    private bool _isUserSeeking;
 
     public MainWindow()
     {
@@ -124,18 +127,43 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         DataContext = this;
         _settings = new SettingsService();
         _ = LoadPlaylistAsync();
-        // Sub-second polling keeps the displayed time within ~a quarter second
-        // of the audio without the bar visibly stepping.
         timer.Interval = TimeSpan.FromMilliseconds(250);
         timer.Tick += (_, _) => UpdateSeekBar();
+        seekBarSlider.AddHandler(InputElement.PointerPressedEvent, OnSeekBarPointerPressed, RoutingStrategies.Tunnel);
+        seekBarSlider.AddHandler(InputElement.PointerReleasedEvent, OnSeekBarPointerReleased, RoutingStrategies.Tunnel);
+        seekBarSlider.AddHandler(InputElement.PointerCaptureLostEvent, OnSeekBarPointerCaptureLost, RoutingStrategies.Tunnel);
     }
 
     private void UpdateSeekBar()
     {
+        if (_isUserSeeking) return;
         double seconds = _song.Position.TotalSeconds;
         if (double.IsNaN(seconds) || seconds < 0) seconds = 0;
         if (seconds > seekBarSlider.Maximum) seconds = seekBarSlider.Maximum;
         seekBarSlider.Value = seconds;
+    }
+
+    private void OnSeekBarPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        _isUserSeeking = true;
+    }
+
+    private void OnSeekBarPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        CommitSeek();
+    }
+
+    private void OnSeekBarPointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)
+    {
+        CommitSeek();
+    }
+
+    private void CommitSeek()
+    {
+        if (!_isUserSeeking) return;
+        _song.Position = TimeSpan.FromSeconds(seekBarSlider.Value);
+        _isUserSeeking = false;
+        UpdateSeekBar();
     }
 
     #region media playback functions

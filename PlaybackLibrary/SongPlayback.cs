@@ -6,7 +6,7 @@ namespace PlaybackLibrary;
 
 public interface ISongPlayback : IDisposable
 {
-    TimeSpan Position { get; }
+    TimeSpan Position { get; set; }
     void Load(int playlistIndex);
     Task<double> Play();
     void Resume();
@@ -35,8 +35,15 @@ file sealed class WindowsSongPlayback : ISongPlayback
     private MediaPlayer Player =>
         _player ??= new MediaPlayer();
 
-    public TimeSpan Position =>
-        _player?.PlaybackSession.Position ?? TimeSpan.Zero;
+    public TimeSpan Position
+    {
+        get => _player?.PlaybackSession.Position ?? TimeSpan.Zero;
+        set
+        {
+            if (_player is null) return;
+            Player.PlaybackSession.Position = value;
+        }
+    }
 
     public void Load(int playlistIndex)
     {
@@ -98,7 +105,7 @@ file sealed class WindowsSongPlayback : ISongPlayback
 #else
 file sealed class StubSongPlayback : ISongPlayback
 {
-    public TimeSpan Position => TimeSpan.Zero;
+    public TimeSpan Position { get; set; }
 
     public void Load(int playlistIndex) =>
         Console.WriteLine($"Load: Linux version WOP");
