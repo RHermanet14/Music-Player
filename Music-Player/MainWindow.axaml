@@ -65,14 +65,18 @@
                         <ToggleButton x:Name="RightCollapse" DockPanel.Dock="Right" VerticalAlignment="Center"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Button
+                                x:Name="prevSong"
                                 Content="&lt;&lt;"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
+                                Click="OnSongSkipClick"
                             />
                             <Button
+                                x:Name="prevTime"
                                 Content="&lt;"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
+                                Click="OnTimeSkipClick"
                             />
                             <Button
                                 Content="="
@@ -81,14 +85,18 @@
                                 Click="OnPlayButtonClick"
                             />
                             <Button
+                                x:Name="nextTime"
                                 Content="&gt;"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
+                                Click="OnTimeSkipClick"
                             />
                             <Button
+                                x:Name="nextSong"
                                 Content="&gt;&gt;"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
+                                Click="OnSongSkipClick"
                             />
                         </StackPanel>
                     </DockPanel>

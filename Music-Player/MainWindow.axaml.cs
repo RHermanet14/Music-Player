@@ -196,6 +196,24 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
         UpdateSeekBar();
     }
+
+    private void OnTimeSkipClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if(object.Name == "prevTime") {
+            // seek to five seconds ago
+        } else {
+            // seek to five seconds in the future
+        }
+    }
+
+    private void OnSongSkipClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (object.Name == "prevSong") {
+            // get index in playlist array and set the song to the prev and play
+        } else {
+            // either go to end of current song or play next index
+        }
+    }
     #endregion
 
     private async Task LoadPlaylistAsync()
