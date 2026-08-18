@@ -197,21 +197,37 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         UpdateSeekBar();
     }
 
-    private void OnTimeSkipClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void OnTimeSkipClick(object? sender, RoutedEventArgs e)
     {
-        if(object.Name == "prevTime") {
-            // seek to five seconds ago
-        } else {
-            // seek to five seconds in the future
+        if(sender is Control c) {
+            string? name = c.Name;
+            if (name == "prevTime")
+            {
+                _song.Position = TimeSpan.FromSeconds(seekBarSlider.Value - 5);
+                _isUserSeeking = false;
+                UpdateSeekBar();
+            } 
+            else
+            {
+                _song.Position = TimeSpan.FromSeconds(seekBarSlider.Value + 5);
+                _isUserSeeking = false;
+                UpdateSeekBar();
+            }
         }
     }
 
-    private void OnSongSkipClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void OnSongSkipClick(object? sender, RoutedEventArgs e)
     {
-        if (object.Name == "prevSong") {
-            // get index in playlist array and set the song to the prev and play
-        } else {
-            // either go to end of current song or play next index
+        if(sender is Control c) {
+            string? name = c.Name;
+            if (name == "prevSong")
+            {
+                
+            } 
+            else
+            {
+                
+            }
         }
     }
     #endregion
