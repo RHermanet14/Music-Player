@@ -6,6 +6,7 @@ namespace PlaybackLibrary;
 
 public interface ISongPlayback : IDisposable
 {
+    event Action? TrackEnded;
     TimeSpan Position { get; set; }
     void Load(int playlistIndex);
     Task<double> Play();
@@ -29,11 +30,26 @@ public interface ISongPlayback : IDisposable
 #if WINDOWS
 file sealed class WindowsSongPlayback : ISongPlayback
 {
+    public event Action? TrackEnded;
+
     private MediaPlayer? _player;
     private readonly MediaPlaybackList _playbackList = new();
+    private bool _ignoreTrackEnded;
 
     private MediaPlayer Player =>
         _player ??= new MediaPlayer();
+
+    public WindowsSongPlayback()
+    {
+        _playbackList.CurrentItemChanged += OnCurrentItemChanged;
+    }
+
+    private void OnCurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
+    {
+        if (_ignoreTrackEnded) return;
+        if (args.Reason != MediaPlaybackItemChangedReason.EndOfStream) return;
+        TrackEnded?.Invoke();
+    }
 
     public TimeSpan Position
     {
@@ -49,6 +65,7 @@ file sealed class WindowsSongPlayback : ISongPlayback
     {
         if (playlistIndex < 0 || playlistIndex >= _playbackList.Items.Count)
             return;
+        _ignoreTrackEnded = true;
         Player.Source = null;
         _playbackList.StartingItem = _playbackList.Items[playlistIndex];
         Player.Source = _playbackList;
@@ -66,7 +83,9 @@ file sealed class WindowsSongPlayback : ISongPlayback
 
         Player.MediaOpened += openedHandler;
         Player.Play();
-        return await tcs.Task;
+        double duration = await tcs.Task;
+        _ignoreTrackEnded = false;
+        return duration;
     }
 
     public void Resume() => Player.Play();
@@ -87,14 +106,17 @@ file sealed class WindowsSongPlayback : ISongPlayback
 
     public void ClearPlaylist()
     {
+        _ignoreTrackEnded = true;
         if (_player != null)
             _player.Source = null;
         _playbackList.Items.Clear();
         _playbackList.StartingItem = null;
+        _ignoreTrackEnded = false;
     }
 
     public void Dispose()
     {
+        _playbackList.CurrentItemChanged -= OnCurrentItemChanged;
         if (_player is null) return;
         _player.Pause();
         _player.Source = null;
@@ -105,6 +127,7 @@ file sealed class WindowsSongPlayback : ISongPlayback
 #else
 file sealed class StubSongPlayback : ISongPlayback
 {
+    public event Action? TrackEnded;
     public TimeSpan Position { get; set; }
 
     public void Load(int playlistIndex) =>

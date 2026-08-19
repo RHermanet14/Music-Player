@@ -120,6 +120,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     public DispatcherTimer timer = new();
     private bool _isUserSeeking;
+    private SongFile? _currentSong;
 
     public MainWindow()
     {
@@ -132,6 +133,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         seekBarSlider.AddHandler(InputElement.PointerPressedEvent, OnSeekBarPointerPressed, RoutingStrategies.Tunnel);
         seekBarSlider.AddHandler(InputElement.PointerReleasedEvent, OnSeekBarPointerReleased, RoutingStrategies.Tunnel);
         seekBarSlider.AddHandler(InputElement.PointerCaptureLostEvent, OnSeekBarPointerCaptureLost, RoutingStrategies.Tunnel);
+        _song.TrackEnded += () => Dispatcher.UIThread.Post(OnTrackEnded);
     }
 
     private void UpdateSeekBar()
@@ -169,6 +171,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     #region media playback functions
     public async void LoadAndPlay(SongFile file)
     {
+        _currentSong = file;
         timer.Stop();
         CurrentSongLabel.Text = Path.GetFileName(file.Name);
         _song.Load(file.Index);
@@ -178,6 +181,41 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         IsSeekBarVisible = true;
         UpdateSeekBar();
         timer.Start();
+    }
+
+    private SongFile? SongAtOffset(int delta)
+    {
+        if (_currentSong is null || Playlist.Count == 0)
+            return null;
+
+        int i = -1;
+        for (int n = 0; n < Playlist.Count; n++)
+        {
+            if (Playlist[n].Index == _currentSong.Index)
+            {
+                i = n;
+                break;
+            }
+        }
+        if (i < 0) return null;
+
+        int next = i + delta;
+        if (next < 0 || next >= Playlist.Count)
+            return null;
+        return Playlist[next];
+    }
+
+    private void OnTrackEnded()
+    {
+        SongFile? next = SongAtOffset(1);
+        if (next is null)
+        {
+            _isPaused = true;
+            timer.Stop();
+            UpdateSeekBar();
+            return;
+        }
+        LoadAndPlay(next);
     }
 
     private void OnPlayButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -218,17 +256,14 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void OnSongSkipClick(object? sender, RoutedEventArgs e)
     {
-        if(sender is Control c) {
-            string? name = c.Name;
-            if (name == "prevSong")
-            {
-                
-            } 
-            else
-            {
-                
-            }
-        }
+        if (sender is not Control { Name: string name })
+            return;
+
+        int delta = name == "prevSong" ? -1 : 1;
+        SongFile? target = SongAtOffset(delta);
+        if (target is null)
+            return;
+        LoadAndPlay(target);
     }
     #endregion
 
@@ -263,6 +298,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         OriginalPlaylist.Clear();
         Playlist.Clear();
         _song.ClearPlaylist();
+        _currentSong = null;
         timer.Stop();
         _isPaused = true;
         seekBarSlider.Value = 0;
