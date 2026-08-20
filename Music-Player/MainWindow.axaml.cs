@@ -112,19 +112,30 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private bool IsShuffled = false;
     public static readonly StyledProperty<bool> IsSeekBarVisibleProperty =
         AvaloniaProperty.Register<MainWindow, bool>(nameof(IsSeekBarVisible));
+    public static readonly StyledProperty<SongFile?> CurrentSongProperty =
+        AvaloniaProperty.Register<MainWindow, SongFile?>(nameof(CurrentSong));
+
     public bool IsSeekBarVisible
     {
         get => GetValue(IsSeekBarVisibleProperty);
         set => SetValue(IsSeekBarVisibleProperty, value);
     }
 
+    public SongFile? CurrentSong
+    {
+        get => GetValue(CurrentSongProperty);
+        set => SetValue(CurrentSongProperty, value);
+    }
+
     public DispatcherTimer timer = new();
     private bool _isUserSeeking;
-    private SongFile? _currentSong;
+    private bool _updatingPlaylistSelection;
+    private ListBox _playlistListBox = null!;
 
     public MainWindow()
     {
         InitializeComponent();
+        _playlistListBox = this.FindControl<ListBox>("playlistListBox")!;
         DataContext = this;
         _settings = new SettingsService();
         _ = LoadPlaylistAsync();
@@ -171,7 +182,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     #region media playback functions
     public async void LoadAndPlay(SongFile file)
     {
-        _currentSong = file;
+        _updatingPlaylistSelection = true;
+        CurrentSong = file;
+        _playlistListBox.SelectedItem = file;
+        Dispatcher.UIThread.Post(() => _updatingPlaylistSelection = false);
+
         timer.Stop();
         CurrentSongLabel.Text = Path.GetFileName(file.Name);
         _song.Load(file.Index);
@@ -185,13 +200,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private SongFile? SongAtOffset(int delta)
     {
-        if (_currentSong is null || Playlist.Count == 0)
+        if (CurrentSong is null || Playlist.Count == 0)
             return null;
 
         int i = -1;
         for (int n = 0; n < Playlist.Count; n++)
         {
-            if (Playlist[n].Index == _currentSong.Index)
+            if (Playlist[n].Index == CurrentSong.Index)
             {
                 i = n;
                 break;
@@ -203,6 +218,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (next < 0 || next >= Playlist.Count)
             return null;
         return Playlist[next];
+    }
+
+    private void OnPlaylistSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_updatingPlaylistSelection) return;
+        if (_playlistListBox.SelectedItem is not SongFile song) return;
+        LoadAndPlay(song);
     }
 
     private void OnTrackEnded()
@@ -298,7 +320,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         OriginalPlaylist.Clear();
         Playlist.Clear();
         _song.ClearPlaylist();
-        _currentSong = null;
+        CurrentSong = null;
+        _updatingPlaylistSelection = true;
+        _playlistListBox.SelectedItem = null;
+        _updatingPlaylistSelection = false;
         timer.Stop();
         _isPaused = true;
         seekBarSlider.Value = 0;

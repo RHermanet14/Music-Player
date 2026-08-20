@@ -113,20 +113,15 @@
                     HorizontalScrollBarVisibility="Auto"
                     Background="{DynamicResource PrimaryForeground}"
                     Width="400">
-                <StackPanel>
-                    <ItemsControl ItemsSource="{Binding Playlist}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Spacing="8"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="local:SongFile">
-                                <Button Content="{Binding Name}" Padding="12,6" Click="OnPlaylistSongClick"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
+                <ListBox x:Name="playlistListBox"
+                         ItemsSource="{Binding Playlist}"
+                         SelectionChanged="OnPlaylistSelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="local:SongFile">
+                            <TextBlock Text="{Binding Name}" Padding="12,6"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
             </ScrollViewer>
         </DockPanel>
         
