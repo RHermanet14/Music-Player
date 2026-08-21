@@ -289,6 +289,15 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     }
     #endregion
 
+    private System.Collections.Generic.List<IStorageItem> SortFiles(System.Collections.Generic.List<IStorageItem> files)
+    {
+        // Takes the list of files from the folder
+        // Read a the value of a component (radio component?)
+        // Switch case sort the list
+        // Return the sorted list of files
+        return files;
+    }
+
     private async Task LoadPlaylistAsync()
     {
         var topLevel = GetTopLevel(this);
@@ -317,6 +326,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 return;
             }
         }
+        var files = await folder.GetItemsAsync().ToListAsync();
+        var sortedFiles = SortFiles(files);
         OriginalPlaylist.Clear();
         Playlist.Clear();
         _song.ClearPlaylist();
@@ -329,7 +340,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         seekBarSlider.Value = 0;
         IsSeekBarVisible = false;
         int songIndex = 0;
-        await foreach (var item in folder.GetItemsAsync())
+        foreach (var item in sortedFiles)
         {
             if (item is IStorageFile file &&
                 file.Name.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
