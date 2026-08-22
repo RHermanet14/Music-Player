@@ -14,6 +14,7 @@ using Avalonia;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using System.Collections.Generic;
 
 namespace Music_Player;
 
@@ -85,6 +86,7 @@ public class SongFile
     public string Name { get; set; } = "";
     public Uri Path { get; set; } = new Uri("about:blank");
     public int Index { get; set; }
+    public DateTime DateCreated {get; set;}
 }
 
 public static class ObservableCollectionExtension
@@ -145,6 +147,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         seekBarSlider.AddHandler(InputElement.PointerReleasedEvent, OnSeekBarPointerReleased, RoutingStrategies.Tunnel);
         seekBarSlider.AddHandler(InputElement.PointerCaptureLostEvent, OnSeekBarPointerCaptureLost, RoutingStrategies.Tunnel);
         _song.TrackEnded += () => Dispatcher.UIThread.Post(OnTrackEnded);
+        sortComboBox.SelectionChanged += OnSortComboBoxChanged;
     }
 
     private void UpdateSeekBar()
@@ -289,13 +292,42 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     }
     #endregion
 
-    private System.Collections.Generic.List<IStorageItem> SortFiles(System.Collections.Generic.List<IStorageItem> files)
+    private async Task<List<SongFile>> SortPlaylist(List<IStorageItem> files)
     {
-        // Takes the list of files from the folder
-        // Read a the value of a component (radio component?)
-        // Switch case sort the list
-        // Return the sorted list of files
-        return files;
+        List<SongFile> sortedSongs= [];
+        foreach (var item in files)
+        {
+            if (item is IStorageFile file &&
+                file.Name.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
+            {
+                var fileProperties = await file.GetBasicPropertiesAsync();
+                DateTimeOffset? fileCreationDate = fileProperties?.DateCreated;
+                DateTime fileDateTime = DateTime.MinValue;
+                if (fileCreationDate.HasValue)
+                {
+                    fileDateTime = fileCreationDate.Value.DateTime;
+                }
+                sortedSongs.Add(new SongFile
+                {
+                    Name = item.Name,
+                    Path = item.Path,
+                    DateCreated = fileDateTime
+                });
+            }
+        }
+        sortedSongs = sortComboBox.SelectedIndex switch
+        {
+            1 => [.. sortedSongs.OrderByDescending(f => f.DateCreated)],
+            2 => [.. sortedSongs.OrderBy(f => f.Name)],
+            3 => [.. sortedSongs.OrderByDescending(f => f.Name)],
+            _ => [.. sortedSongs.OrderBy(f => f.DateCreated)],
+        };
+        return sortedSongs;
+    }
+
+    private async void OnSortComboBoxChanged(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        await LoadPlaylistAsync();
     }
 
     private async Task LoadPlaylistAsync()
@@ -327,7 +359,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             }
         }
         var files = await folder.GetItemsAsync().ToListAsync();
-        var sortedFiles = SortFiles(files);
         OriginalPlaylist.Clear();
         Playlist.Clear();
         _song.ClearPlaylist();
@@ -340,25 +371,34 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         seekBarSlider.Value = 0;
         IsSeekBarVisible = false;
         int songIndex = 0;
-        foreach (var item in sortedFiles)
+
+        List<SongFile> songs = await SortPlaylist(files);
+        foreach (SongFile song in songs)
+        {
+            OriginalPlaylist.Add(new SongFile
+            {
+                Name = song.Name,
+                Path = song.Path,
+                Index = songIndex,
+                DateCreated = song.DateCreated
+            });
+            Playlist.Add(new SongFile
+            {
+                Name = song.Name,
+                Path = song.Path,
+                Index = songIndex,
+                DateCreated = song.DateCreated
+            });
+            _song.AddToPlaylist(song.Path);
+            songIndex++;
+        }
+        foreach (var item in files)
         {
             if (item is IStorageFile file &&
                 file.Name.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
             {
-                OriginalPlaylist.Add(new SongFile
-                {
-                    Name = file.Name,
-                    Path = file.Path,
-                    Index = songIndex
-                });
-                Playlist.Add(new SongFile
-                {
-                    Name = file.Name,
-                    Path = file.Path,
-                    Index = songIndex
-                });
-                _song.AddToPlaylist(file.Path);
-                songIndex++;
+                
+                
             }
         }
         if (IsShuffled) Playlist.Shuffle();
