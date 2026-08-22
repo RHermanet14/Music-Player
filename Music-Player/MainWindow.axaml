@@ -107,7 +107,18 @@
             </Border>
         </Grid>
         <DockPanel Grid.Column="2" IsVisible="{Binding !#RightCollapse.IsChecked}">
-            <ToggleButton DockPanel.Dock="Bottom" Height="40" Click="ShuffleClick" HorizontalAlignment="Center" VerticalAlignment="Center" Content="🔀" Background="#303030"/>
+            <DockPanel DockPanel.Dock="Bottom" Height="40">
+                <TextBlock DockPanel.Dock="Left" HorizontalAlignment="Left" VerticalAlignment="Center" Text="Sort By:"/>
+                <ToggleButton DockPanel.Dock="Right" Click="ShuffleClick" HorizontalAlignment="Center" VerticalAlignment="Center" Content="🔀" Background="#303030"/>
+                <ComboBox HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <ComboBoxItem>Date (Increasing)</ComboBoxItem>
+                    <ComboBoxItem>Date (Decreasing)</ComboBoxItem>
+                    <ComboBoxItem>Name (Increasing)</ComboBoxItem>
+                    <ComboBoxItem>Name (Decreasing)</ComboBoxItem>
+                    <ComboBoxItem>Length (Increasing)</ComboBoxItem>
+                    <ComboBoxItem>Length (Decreasing)</ComboBoxItem>
+                </ComboBox>
+            </DockPanel>
             <ScrollViewer
                     VerticalScrollBarVisibility="Auto"
                     HorizontalScrollBarVisibility="Auto"
