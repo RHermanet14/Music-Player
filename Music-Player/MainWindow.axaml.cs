@@ -330,6 +330,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         await LoadPlaylistAsync();
     }
 
+    private void OnSearchBarChanged(object? sender, RoutedEventArgs e)
+    {
+        string filter = searchBar.Text ?? "";
+        List<SongFile> filteredSongs = OriginalPlaylist.Where(s => s.Name.StartsWith(filter)).ToList();
+        // Set playlist to filtered playlist while maintaining copy of original
+    }
+
     private async Task LoadPlaylistAsync()
     {
         var topLevel = GetTopLevel(this);
