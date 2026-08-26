@@ -111,6 +111,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private bool _isPaused = true;
     public ObservableCollection<SongFile> OriginalPlaylist { get; } = [];
     public ObservableCollection<SongFile> Playlist { get; } = [];
+    public ObservableCollection<SongFile> FilteredPlaylist {get;} = [];
+    public bool isFiltered = false;
     private bool IsShuffled = false;
     public static readonly StyledProperty<bool> IsSeekBarVisibleProperty =
         AvaloniaProperty.Register<MainWindow, bool>(nameof(IsSeekBarVisible));
@@ -333,8 +335,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private void OnSearchBarChanged(object? sender, RoutedEventArgs e)
     {
         string filter = searchBar.Text ?? "";
+        isFiltered = !string.IsNullOrWhiteSpace(filter);
         List<SongFile> filteredSongs = OriginalPlaylist.Where(s => s.Name.StartsWith(filter)).ToList();
-        // Set playlist to filtered playlist while maintaining copy of original
+        FilteredPlaylist.Clear();
+        foreach (SongFile song in filteredSongs)
+        {
+            FilteredPlaylist.Add(song);
+        }
     }
 
     private async Task LoadPlaylistAsync()
@@ -398,15 +405,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             });
             _song.AddToPlaylist(song.Path);
             songIndex++;
-        }
-        foreach (var item in files)
-        {
-            if (item is IStorageFile file &&
-                file.Name.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
-            {
-                
-                
-            }
         }
         if (IsShuffled) Playlist.Shuffle();
     }
