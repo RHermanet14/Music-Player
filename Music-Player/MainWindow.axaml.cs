@@ -112,12 +112,19 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     public ObservableCollection<SongFile> OriginalPlaylist { get; } = [];
     public ObservableCollection<SongFile> Playlist { get; } = [];
     public ObservableCollection<SongFile> FilteredPlaylist {get;} = [];
-    public bool isFiltered = false;
+    public static readonly StyledProperty<bool> IsFilteredProperty =
+        AvaloniaProperty.Register<MainWindow, bool>(nameof(IsFiltered));
     private bool IsShuffled = false;
     public static readonly StyledProperty<bool> IsSeekBarVisibleProperty =
         AvaloniaProperty.Register<MainWindow, bool>(nameof(IsSeekBarVisible));
     public static readonly StyledProperty<SongFile?> CurrentSongProperty =
         AvaloniaProperty.Register<MainWindow, SongFile?>(nameof(CurrentSong));
+
+    public bool IsFiltered
+    {
+        get => GetValue(IsFilteredProperty);
+        set => SetValue(IsFilteredProperty, value);
+    }
 
     public bool IsSeekBarVisible
     {
@@ -335,7 +342,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private void OnSearchBarChanged(object? sender, RoutedEventArgs e)
     {
         string filter = searchBar.Text ?? "";
-        isFiltered = !string.IsNullOrWhiteSpace(filter);
+        IsFiltered = string.IsNullOrWhiteSpace(filter);
+        if (!IsFiltered) return;
         List<SongFile> filteredSongs = OriginalPlaylist.Where(s => s.Name.StartsWith(filter)).ToList();
         FilteredPlaylist.Clear();
         foreach (SongFile song in filteredSongs)
