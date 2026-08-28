@@ -339,17 +339,22 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         await LoadPlaylistAsync();
     }
 
-    private void OnSearchBarChanged(object? sender, RoutedEventArgs e)
+    private void FilterSearchBar()
     {
         string filter = searchBar.Text ?? "";
-        IsFiltered = string.IsNullOrWhiteSpace(filter);
-        if (!IsFiltered) return;
-        List<SongFile> filteredSongs = OriginalPlaylist.Where(s => s.Name.StartsWith(filter)).ToList();
         FilteredPlaylist.Clear();
-        foreach (SongFile song in filteredSongs)
+        IsFiltered = !string.IsNullOrWhiteSpace(filter);
+        if (IsFiltered)
         {
+            foreach (SongFile song in OriginalPlaylist.Where(s => s.Name.Contains(filter, StringComparison.OrdinalIgnoreCase)))
             FilteredPlaylist.Add(song);
         }
+        SongBrowser.ItemsSource = IsFiltered ? FilteredPlaylist : OriginalPlaylist;
+    }
+
+    private void OnSearchBarChanged(object? sender, RoutedEventArgs e)
+    {
+        FilterSearchBar();
     }
 
     private async Task LoadPlaylistAsync()
@@ -415,6 +420,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             songIndex++;
         }
         if (IsShuffled) Playlist.Shuffle();
+        FilterSearchBar();
     }
 
     private void OnPlaylistSongClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

@@ -8,8 +8,7 @@
         Title="Music_Player"
         xmlns:local="using:Music_Player"
         x:DataType="local:MainWindow"
-        xmlns:conv="using:Music_Player"
-        x:Name="RootWindow">
+        xmlns:conv="using:Music_Player">
     <Window.Resources>
         <conv:SeekBarConverter x:Key="SeekTimeModifier"/>
     </Window.Resources>
@@ -29,15 +28,7 @@
         </Border>
         <Grid Grid.Column="1" RowDefinitions="*, 135">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <ScrollViewer.Styles>
-                    <Style Selector="ItemsControl.SongBrowser">
-                        <Setter Property="ItemsSource" Value="{Binding OriginalPlaylist, ElementName=RootWindow}"/>
-                    </Style>
-                    <Style Selector="ItemsControl.SongBrowser[Tag=True]">
-                        <Setter Property="ItemsSource" Value="{Binding FilteredPlaylist, ElementName=RootWindow}"/>
-                    </Style>
-                </ScrollViewer.Styles>
-                <ItemsControl x:Name="SongBrowser" ItemsSource="{Binding OriginalPlaylist}" Tag="{Binding IsFiltered, ElementName=RootWindow}">
+                <ItemsControl x:Name="SongBrowser">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <UniformGrid Columns="4"/>
