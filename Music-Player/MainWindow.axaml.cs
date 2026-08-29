@@ -14,6 +14,7 @@ using Avalonia;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using System.Collections.Generic;
 
 namespace Music_Player;
@@ -104,8 +105,12 @@ public static class ObservableCollectionExtension
     }
 }
 
-public partial class MainWindow : Window, INotifyPropertyChanged
+public partial class MainWindow : Window
 {
+    private static readonly DataFormat<SongFile> SongFileDragFormat =
+        DataFormat.CreateInProcessFormat<SongFile>("MusicPlayer.SongFile");
+    private const double PlaylistDragThreshold = 8;
+
     private readonly SettingsService _settings;
     private readonly ISongPlayback _song = SongPlayback.Create();
     private bool _isPaused = true;
@@ -140,7 +145,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     public DispatcherTimer timer = new();
     private bool _isUserSeeking;
-    private bool _updatingPlaylistSelection;
+    private bool _playlistDragActive;
+    private bool _playlistDidDrag;
+    private SongFile? _clickPlaySong;
+    private SongFile? _pendingDragSong;
+    private Point? _dragStartPoint;
+    private PointerPressedEventArgs? _dragPressEvent;
     private ListBox _playlistListBox = null!;
 
     public MainWindow()
@@ -194,10 +204,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     #region media playback functions
     public async void LoadAndPlay(SongFile file)
     {
-        _updatingPlaylistSelection = true;
         CurrentSong = file;
         _playlistListBox.SelectedItem = file;
-        Dispatcher.UIThread.Post(() => _updatingPlaylistSelection = false);
 
         timer.Stop();
         CurrentSongLabel.Text = Path.GetFileName(file.Name);
@@ -234,9 +242,103 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void OnPlaylistSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (_updatingPlaylistSelection) return;
-        if (_playlistListBox.SelectedItem is not SongFile song) return;
-        LoadAndPlay(song);
+        // Playback is handled on pointer release so drag-to-reorder doesn't start playing.
+    }
+
+    private void OnPlaylistItemPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is not Border border || border.DataContext is not SongFile song) return;
+        if (!e.GetCurrentPoint(border).Properties.IsLeftButtonPressed) return;
+
+        _clickPlaySong = song;
+        _playlistDidDrag = false;
+        _pendingDragSong = song;
+        _dragStartPoint = e.GetPosition(border);
+        _dragPressEvent = e;
+        e.Pointer.Capture(border);
+    }
+
+    private async void OnPlaylistItemPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_pendingDragSong is null || _dragStartPoint is null || _dragPressEvent is null || sender is not Border border) return;
+        if (!e.GetCurrentPoint(border).Properties.IsLeftButtonPressed) return;
+
+        var current = e.GetPosition(border);
+        var dx = current.X - _dragStartPoint.Value.X;
+        var dy = current.Y - _dragStartPoint.Value.Y;
+        if (dx * dx + dy * dy < PlaylistDragThreshold * PlaylistDragThreshold) return;
+
+        _playlistDidDrag = true;
+        _clickPlaySong = null;
+        var song = _pendingDragSong;
+        var pressEvent = _dragPressEvent;
+        ClearPlaylistDragState(border, e.Pointer);
+
+        _playlistDragActive = true;
+        var item = new DataTransferItem();
+        item.Set(SongFileDragFormat, song);
+        var transfer = new DataTransfer();
+        transfer.Add(item);
+        await DragDrop.DoDragDropAsync(pressEvent, transfer, DragDropEffects.Move);
+        Dispatcher.UIThread.Post(() => _playlistDragActive = false);
+    }
+
+    private void OnPlaylistItemPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (sender is not Border border) return;
+
+        bool shouldPlay = _clickPlaySong is not null && !_playlistDidDrag && !_playlistDragActive;
+        SongFile? song = _clickPlaySong;
+        ClearPlaylistDragState(border, e.Pointer);
+        _clickPlaySong = null;
+        _playlistDidDrag = false;
+
+        if (shouldPlay && song is not null)
+            LoadAndPlay(song);
+    }
+
+    private void ClearPlaylistDragState(Border border, IPointer pointer)
+    {
+        _pendingDragSong = null;
+        _dragStartPoint = null;
+        _dragPressEvent = null;
+        if (pointer.Captured == border)
+            pointer.Capture(null);
+    }
+
+    private void OnPlaylistDragOver(object? sender, DragEventArgs e)
+    {
+        e.DragEffects = e.DataTransfer.Contains(SongFileDragFormat)
+            ? DragDropEffects.Move
+            : DragDropEffects.None;
+    }
+
+    private void OnPlaylistDrop(object? sender, DragEventArgs e)
+    {
+        if (e.DataTransfer.TryGetValue(SongFileDragFormat) is not SongFile dragged) return;
+
+        var target = FindSongFileAtPoint(e.GetPosition(_playlistListBox));
+        if (target is null || ReferenceEquals(dragged, target)) return;
+
+        int oldIndex = Playlist.IndexOf(dragged);
+        int newIndex = Playlist.IndexOf(target);
+        if (oldIndex < 0 || newIndex < 0 || oldIndex == newIndex) return;
+
+        Playlist.Move(oldIndex, newIndex);
+    }
+
+    private SongFile? FindSongFileAtPoint(Point position)
+    {
+        if (_playlistListBox.InputHitTest(position) is not Visual hit) return null;
+
+        Visual? current = hit;
+        while (current is not null)
+        {
+            if (current is Control { DataContext: SongFile song })
+                return song;
+            current = current.GetVisualParent();
+        }
+        return null;
     }
 
     private void OnTrackEnded()
@@ -390,9 +492,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         Playlist.Clear();
         _song.ClearPlaylist();
         CurrentSong = null;
-        _updatingPlaylistSelection = true;
         _playlistListBox.SelectedItem = null;
-        _updatingPlaylistSelection = false;
         timer.Stop();
         _isPaused = true;
         seekBarSlider.Value = 0;

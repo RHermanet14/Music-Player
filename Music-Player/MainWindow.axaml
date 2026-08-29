@@ -124,10 +124,18 @@
                     Width="400">
                 <ListBox x:Name="playlistListBox"
                          ItemsSource="{Binding Playlist}"
-                         SelectionChanged="OnPlaylistSelectionChanged">
+                         DragDrop.AllowDrop="True"
+                         SelectionChanged="OnPlaylistSelectionChanged"
+                         DragDrop.DragOver="OnPlaylistDragOver"
+                         DragDrop.Drop="OnPlaylistDrop">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="local:SongFile">
-                            <TextBlock Text="{Binding Name}" Padding="12,6"/>
+                            <Border Background="Transparent"
+                                    PointerPressed="OnPlaylistItemPointerPressed"
+                                    PointerMoved="OnPlaylistItemPointerMoved"
+                                    PointerReleased="OnPlaylistItemPointerReleased">
+                                <TextBlock Text="{Binding Name}" Padding="12,6"/>
+                            </Border>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
