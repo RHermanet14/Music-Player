@@ -22,8 +22,44 @@
                     <Button Content="Open Folder" HorizontalAlignment="Stretch" Click="OnOpenFolderButtonClick"></Button>
                     <Button Content="Home" HorizontalAlignment="Stretch"></Button>
                     <TextBox x:Name="searchBar" PlaceholderText="Search" HorizontalAlignment="Stretch" TextChanged="OnSearchBarChanged"></TextBox>
+                    <Border x:Name="settingsPanel"
+                            IsVisible="{Binding IsSettingsOpen}"
+                            Background="#1A1D35"
+                            CornerRadius="6"
+                            Padding="10">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Transitions" FontWeight="Bold"/>
+                            <ToggleButton x:Name="transitionsEnabledToggle"
+                                          Content="Enable transitions"
+                                          IsCheckedChanged="OnTransitionSettingChanged"/>
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Text="Crossfade" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="crossfadeValueLabel" Grid.Column="1" Text="0 s" Opacity="0.75"/>
+                            </Grid>
+                            <Slider x:Name="crossfadeSlider" HorizontalAlignment="Stretch"
+                                    Minimum="0" Maximum="3" TickFrequency="0.1" SmallChange="0.1" LargeChange="0.5"
+                                    IsSnapToTickEnabled="True"
+                                    ValueChanged="OnTransitionSettingChanged"/>
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Text="Trim end" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="endTrimValueLabel" Grid.Column="1" Text="0 s" Opacity="0.75"/>
+                            </Grid>
+                            <Slider x:Name="endTrimSlider" HorizontalAlignment="Stretch"
+                                    Minimum="0" Maximum="3" TickFrequency="0.1" SmallChange="0.1" LargeChange="0.5"
+                                    IsSnapToTickEnabled="True"
+                                    ValueChanged="OnTransitionSettingChanged"/>
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Text="Trim start" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="startTrimValueLabel" Grid.Column="1" Text="0 s" Opacity="0.75"/>
+                            </Grid>
+                            <Slider x:Name="startTrimSlider" HorizontalAlignment="Stretch"
+                                    Minimum="0" Maximum="3" TickFrequency="0.1" SmallChange="0.1" LargeChange="0.5"
+                                    IsSnapToTickEnabled="True"
+                                    ValueChanged="OnTransitionSettingChanged"/>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
-                <Button Grid.Row="1" Content="Settings"></Button>
+                <Button Grid.Row="1" Content="Settings" Click="OnSettingsButtonClick"></Button>
             </Grid>
         </Border>
         <Grid Grid.Column="1" RowDefinitions="*, 135">

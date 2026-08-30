@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using System.Text.Json;
 using System.IO;
 using System;
@@ -16,6 +17,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Music_Player;
 
@@ -23,6 +25,10 @@ namespace Music_Player;
 public class AppSettings
 {
     public string LastOpenedFolderPath { get; set; } = "";
+    public bool TransitionsEnabled { get; set; } = true;
+    public double CrossfadeSeconds { get; set; }
+    public double EndTrimSeconds { get; set; }
+    public double StartTrimSeconds { get; set; }
 }
 
 public class SeekBarConverter : IValueConverter
@@ -112,6 +118,7 @@ public partial class MainWindow : Window
     private const double PlaylistDragThreshold = 8;
 
     private readonly SettingsService _settings;
+    private AppSettings _appSettings = new();
     private readonly ISongPlayback _song = SongPlayback.Create();
     private bool _isPaused = true;
     public ObservableCollection<SongFile> OriginalPlaylist { get; } = [];
@@ -124,6 +131,14 @@ public partial class MainWindow : Window
         AvaloniaProperty.Register<MainWindow, bool>(nameof(IsSeekBarVisible));
     public static readonly StyledProperty<SongFile?> CurrentSongProperty =
         AvaloniaProperty.Register<MainWindow, SongFile?>(nameof(CurrentSong));
+    public static readonly StyledProperty<bool> IsSettingsOpenProperty =
+        AvaloniaProperty.Register<MainWindow, bool>(nameof(IsSettingsOpen));
+
+    public bool IsSettingsOpen
+    {
+        get => GetValue(IsSettingsOpenProperty);
+        set => SetValue(IsSettingsOpenProperty, value);
+    }
 
     public bool IsFiltered
     {
@@ -152,13 +167,31 @@ public partial class MainWindow : Window
     private Point? _dragStartPoint;
     private PointerPressedEventArgs? _dragPressEvent;
     private ListBox _playlistListBox = null!;
+    private ToggleButton _transitionsEnabledToggle = null!;
+    private Slider _crossfadeSlider = null!;
+    private Slider _endTrimSlider = null!;
+    private Slider _startTrimSlider = null!;
+    private TextBlock _crossfadeValueLabel = null!;
+    private TextBlock _endTrimValueLabel = null!;
+    private TextBlock _startTrimValueLabel = null!;
+    private bool _transitionStarted;
+    private CancellationTokenSource? _transitionCts;
 
     public MainWindow()
     {
         InitializeComponent();
         _playlistListBox = this.FindControl<ListBox>("playlistListBox")!;
+        _transitionsEnabledToggle = this.FindControl<ToggleButton>("transitionsEnabledToggle")!;
+        _crossfadeSlider = this.FindControl<Slider>("crossfadeSlider")!;
+        _endTrimSlider = this.FindControl<Slider>("endTrimSlider")!;
+        _startTrimSlider = this.FindControl<Slider>("startTrimSlider")!;
+        _crossfadeValueLabel = this.FindControl<TextBlock>("crossfadeValueLabel")!;
+        _endTrimValueLabel = this.FindControl<TextBlock>("endTrimValueLabel")!;
+        _startTrimValueLabel = this.FindControl<TextBlock>("startTrimValueLabel")!;
         DataContext = this;
         _settings = new SettingsService();
+        _appSettings = _settings.Load();
+        ApplySettingsToUi();
         _ = LoadPlaylistAsync();
         timer.Interval = TimeSpan.FromMilliseconds(250);
         timer.Tick += (_, _) => UpdateSeekBar();
@@ -176,6 +209,82 @@ public partial class MainWindow : Window
         if (double.IsNaN(seconds) || seconds < 0) seconds = 0;
         if (seconds > seekBarSlider.Maximum) seconds = seekBarSlider.Maximum;
         seekBarSlider.Value = seconds;
+        _ = CheckForTransitionAsync();
+    }
+
+    private async Task TransitionToSongAsync(SongFile next)
+    {
+        if (_transitionStarted || _song.IsTransitioning) return;
+
+        _transitionStarted = true;
+        _transitionCts?.Cancel();
+        _transitionCts?.Dispose();
+        _transitionCts = new CancellationTokenSource();
+
+        try
+        {
+            double crossfade = _appSettings.CrossfadeSeconds;
+            if (crossfade > 0)
+            {
+                double duration = _song.Duration.TotalSeconds;
+                double remaining = duration - _song.Position.TotalSeconds - _appSettings.EndTrimSeconds;
+                if (remaining < crossfade)
+                    crossfade = Math.Max(0, remaining);
+            }
+
+            double trackDuration = await _song.StartCrossfadeAsync(
+                next.Index,
+                TimeSpan.FromSeconds(_appSettings.StartTrimSeconds),
+                TimeSpan.FromSeconds(crossfade),
+                _transitionCts.Token);
+            ApplySongToUi(next, trackDuration);
+        }
+        catch (OperationCanceledException)
+        {
+            // Manual skip/pause cancelled the transition.
+        }
+        finally
+        {
+            _transitionStarted = false;
+        }
+    }
+
+    private bool TransitionsActive =>
+        _appSettings.TransitionsEnabled &&
+        (_appSettings.CrossfadeSeconds > 0 ||
+         _appSettings.EndTrimSeconds > 0 ||
+         _appSettings.StartTrimSeconds > 0);
+
+    private async Task CheckForTransitionAsync()
+    {
+        if (_isPaused || _isUserSeeking || _song.IsTransitioning || _transitionStarted) return;
+        if (!TransitionsActive) return;
+
+        SongFile? next = SongAtOffset(1);
+        if (next is null) return;
+
+        double duration = _song.Duration.TotalSeconds;
+        if (duration <= 0 || double.IsInfinity(duration)) return;
+
+        double endTrim = _appSettings.EndTrimSeconds;
+        double crossfade = _appSettings.CrossfadeSeconds;
+        double transitionPoint = duration - endTrim - crossfade;
+        if (transitionPoint < 0) transitionPoint = 0;
+
+        if (_song.Position.TotalSeconds < transitionPoint) return;
+
+        await TransitionToSongAsync(next);
+    }
+
+    private void ApplySongToUi(SongFile file, double durationSeconds)
+    {
+        CurrentSong = file;
+        _playlistListBox.SelectedItem = file;
+        CurrentSongLabel.Text = Path.GetFileName(file.Name);
+        seekBarSlider.Maximum = durationSeconds;
+        seekBarSlider.Value = _song.Position.TotalSeconds;
+        _isPaused = false;
+        IsSeekBarVisible = true;
     }
 
     private void OnSeekBarPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -196,6 +305,8 @@ public partial class MainWindow : Window
     private void CommitSeek()
     {
         if (!_isUserSeeking) return;
+        _song.CancelTransition();
+        _transitionStarted = false;
         _song.Position = TimeSpan.FromSeconds(seekBarSlider.Value);
         _isUserSeeking = false;
         UpdateSeekBar();
@@ -204,6 +315,12 @@ public partial class MainWindow : Window
     #region media playback functions
     public async void LoadAndPlay(SongFile file)
     {
+        _song.CancelTransition();
+        _transitionStarted = false;
+        _transitionCts?.Cancel();
+        _transitionCts?.Dispose();
+        _transitionCts = null;
+
         CurrentSong = file;
         _playlistListBox.SelectedItem = file;
 
@@ -341,7 +458,7 @@ public partial class MainWindow : Window
         return null;
     }
 
-    private void OnTrackEnded()
+    private async void OnTrackEnded()
     {
         SongFile? next = SongAtOffset(1);
         if (next is null)
@@ -351,6 +468,13 @@ public partial class MainWindow : Window
             UpdateSeekBar();
             return;
         }
+
+        if (TransitionsActive)
+        {
+            await TransitionToSongAsync(next);
+            return;
+        }
+
         LoadAndPlay(next);
     }
 
@@ -365,6 +489,8 @@ public partial class MainWindow : Window
         else
         {
             _isPaused = true;
+            _song.CancelTransition();
+            _transitionStarted = false;
             _song.Pause();
             timer.Stop();
         }
@@ -561,5 +687,42 @@ public partial class MainWindow : Window
     {
         IsShuffled = !IsShuffled;
         await LoadPlaylistAsync();
+    }
+
+    private void OnSettingsButtonClick(object? sender, RoutedEventArgs e)
+    {
+        IsSettingsOpen = !IsSettingsOpen;
+    }
+
+    private void ApplySettingsToUi()
+    {
+        _transitionsEnabledToggle.IsChecked = _appSettings.TransitionsEnabled;
+        _crossfadeSlider.Value = Math.Min(3, _appSettings.CrossfadeSeconds);
+        _endTrimSlider.Value = Math.Min(3, _appSettings.EndTrimSeconds);
+        _startTrimSlider.Value = Math.Min(3, _appSettings.StartTrimSeconds);
+        UpdateSliderValueLabels();
+    }
+
+    private void UpdateSliderValueLabels()
+    {
+        _crossfadeValueLabel.Text = $"{_crossfadeSlider.Value:0.0} s";
+        _endTrimValueLabel.Text = $"{_endTrimSlider.Value:0.0} s";
+        _startTrimValueLabel.Text = $"{_startTrimSlider.Value:0.0} s";
+    }
+
+    private void SaveTransitionSettings()
+    {
+        _appSettings.TransitionsEnabled = _transitionsEnabledToggle.IsChecked == true;
+        _appSettings.CrossfadeSeconds = _crossfadeSlider.Value;
+        _appSettings.EndTrimSeconds = _endTrimSlider.Value;
+        _appSettings.StartTrimSeconds = _startTrimSlider.Value;
+        _settings.Save(_appSettings);
+    }
+
+    private void OnTransitionSettingChanged(object? sender, RoutedEventArgs e)
+    {
+        UpdateSliderValueLabels();
+        if (!IsLoaded) return;
+        SaveTransitionSettings();
     }
 }

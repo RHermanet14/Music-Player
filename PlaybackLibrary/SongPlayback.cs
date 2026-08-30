@@ -1,4 +1,3 @@
-using Windows.Foundation;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 
@@ -8,14 +7,19 @@ public interface ISongPlayback : IDisposable
 {
     event Action? TrackEnded;
     TimeSpan Position { get; set; }
+    TimeSpan Duration { get; }
+    bool IsTransitioning { get; }
     void Load(int playlistIndex);
     Task<double> Play();
+    Task<double> StartCrossfadeAsync(int nextPlaylistIndex, TimeSpan startOffset, TimeSpan crossfadeDuration, CancellationToken ct);
+    void CancelTransition();
     void Resume();
     void Pause();
     void AddToPlaylist(Uri path);
     void ClearPlaylist();
 }
- public static class SongPlayback
+
+public static class SongPlayback
 {
     public static ISongPlayback Create()
     {
@@ -32,68 +36,138 @@ file sealed class WindowsSongPlayback : ISongPlayback
 {
     public event Action? TrackEnded;
 
-    private MediaPlayer? _player;
+    private readonly MediaPlayer _playerA = new();
+    private readonly MediaPlayer _playerB = new();
+    private MediaPlayer _activePlayer;
+    private MediaPlayer _inactivePlayer;
     private readonly MediaPlaybackList _playbackList = new();
-    private bool _ignoreTrackEnded;
-
-    private MediaPlayer Player =>
-        _player ??= new MediaPlayer();
+    private CancellationTokenSource? _transitionCts;
+    private bool _isTransitioning;
 
     public WindowsSongPlayback()
     {
-        _playbackList.CurrentItemChanged += OnCurrentItemChanged;
+        _activePlayer = _playerA;
+        _inactivePlayer = _playerB;
+        _playerA.MediaEnded += OnActiveMediaEnded;
+        _playerB.MediaEnded += OnActiveMediaEnded;
     }
 
-    private void OnCurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
+    private void OnActiveMediaEnded(MediaPlayer sender, object args)
     {
-        if (_ignoreTrackEnded) return;
-        if (args.Reason != MediaPlaybackItemChangedReason.EndOfStream) return;
+        if (sender != _activePlayer || _isTransitioning) return;
         TrackEnded?.Invoke();
     }
 
+    public bool IsTransitioning => _isTransitioning;
+
     public TimeSpan Position
     {
-        get => _player?.PlaybackSession.Position ?? TimeSpan.Zero;
-        set
-        {
-            if (_player is null) return;
-            Player.PlaybackSession.Position = value;
-        }
+        get => _activePlayer.PlaybackSession.Position;
+        set => _activePlayer.PlaybackSession.Position = value;
     }
+
+    public TimeSpan Duration =>
+        _activePlayer.PlaybackSession.NaturalDuration;
 
     public void Load(int playlistIndex)
     {
-        if (playlistIndex < 0 || playlistIndex >= _playbackList.Items.Count)
-            return;
-        _ignoreTrackEnded = true;
-        Player.Source = null;
-        _playbackList.StartingItem = _playbackList.Items[playlistIndex];
-        Player.Source = _playbackList;
+        CancelTransition();
+        SetPlayerSource(_activePlayer, playlistIndex);
     }
 
     public async Task<double> Play()
     {
-        var tcs = new TaskCompletionSource<double>();
-        void openedHandler(MediaPlayer sender, object args)
+        CancelTransition();
+        _activePlayer.Play();
+        return await WaitForDurationAsync(_activePlayer, CancellationToken.None);
+    }
+
+    public async Task<double> StartCrossfadeAsync(
+        int nextPlaylistIndex,
+        TimeSpan startOffset,
+        TimeSpan crossfadeDuration,
+        CancellationToken ct)
+    {
+        CancelTransition();
+        _transitionCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var token = _transitionCts.Token;
+        _isTransitioning = true;
+
+        var outgoing = _activePlayer;
+        var incoming = _inactivePlayer;
+
+        try
         {
-            Player.MediaOpened -= openedHandler;
-            double seconds = Player.PlaybackSession.NaturalDuration.TotalSeconds;
-            tcs.SetResult(seconds);
+            incoming.Volume = 0;
+            SetPlayerSource(incoming, nextPlaylistIndex);
+            double duration = await WaitForDurationAsync(incoming, token);
+
+            if (startOffset.TotalSeconds > duration)
+                startOffset = TimeSpan.Zero;
+            incoming.PlaybackSession.Position = startOffset;
+            incoming.Pause();
+
+            if (crossfadeDuration.TotalSeconds <= 0)
+            {
+                outgoing.Pause();
+                outgoing.Source = null;
+                outgoing.Volume = 1;
+                incoming.Volume = 1;
+                incoming.Play();
+                SwapPlayers();
+                return duration;
+            }
+
+            incoming.Volume = 0;
+            incoming.Play();
+            outgoing.Play();
+
+            int steps = Math.Max(1, (int)(crossfadeDuration.TotalMilliseconds / 50));
+            for (int i = 0; i <= steps; i++)
+            {
+                token.ThrowIfCancellationRequested();
+                double t = (double)i / steps;
+                outgoing.Volume = 1 - t;
+                incoming.Volume = t;
+                await Task.Delay(50, token);
+            }
+
+            outgoing.Pause();
+            outgoing.Source = null;
+            outgoing.Volume = 1;
+            incoming.Volume = 1;
+            SwapPlayers();
+            return duration;
+        }
+        finally
+        {
+            _isTransitioning = false;
+            _transitionCts?.Dispose();
+            _transitionCts = null;
+        }
+    }
+
+    public void CancelTransition()
+    {
+        if (_transitionCts is not null)
+        {
+            _transitionCts.Cancel();
+            _transitionCts.Dispose();
+            _transitionCts = null;
         }
 
-        Player.MediaOpened += openedHandler;
-        Player.Play();
-        double duration = await tcs.Task;
-        _ignoreTrackEnded = false;
-        return duration;
+        if (!_isTransitioning) return;
+
+        _inactivePlayer.Pause();
+        _inactivePlayer.Source = null;
+        _inactivePlayer.Volume = 1;
+        _activePlayer.Volume = 1;
+        _isTransitioning = false;
     }
 
-    public void Resume() => Player.Play();
+    public void Resume() => _activePlayer.Play();
 
-    public void Pause()
-    {
-        Player.Pause();
-    }
+    public void Pause() => _activePlayer.Pause();
 
     public void AddToPlaylist(Uri path)
     {
@@ -106,22 +180,57 @@ file sealed class WindowsSongPlayback : ISongPlayback
 
     public void ClearPlaylist()
     {
-        _ignoreTrackEnded = true;
-        if (_player != null)
-            _player.Source = null;
+        CancelTransition();
+        _playerA.Pause();
+        _playerB.Pause();
+        _playerA.Source = null;
+        _playerB.Source = null;
         _playbackList.Items.Clear();
-        _playbackList.StartingItem = null;
-        _ignoreTrackEnded = false;
     }
 
     public void Dispose()
     {
-        _playbackList.CurrentItemChanged -= OnCurrentItemChanged;
-        if (_player is null) return;
-        _player.Pause();
-        _player.Source = null;
-        _player.Dispose();
-        _player = null;
+        CancelTransition();
+        _playerA.MediaEnded -= OnActiveMediaEnded;
+        _playerB.MediaEnded -= OnActiveMediaEnded;
+        _playerA.Pause();
+        _playerB.Pause();
+        _playerA.Source = null;
+        _playerB.Source = null;
+        _playerA.Dispose();
+        _playerB.Dispose();
+    }
+
+    private void SwapPlayers()
+    {
+        (_activePlayer, _inactivePlayer) = (_inactivePlayer, _activePlayer);
+    }
+
+    private void SetPlayerSource(MediaPlayer player, int playlistIndex)
+    {
+        if (playlistIndex < 0 || playlistIndex >= _playbackList.Items.Count)
+            return;
+        player.Source = _playbackList.Items[playlistIndex];
+    }
+
+    private static async Task<double> WaitForDurationAsync(MediaPlayer player, CancellationToken ct)
+    {
+        double existing = player.PlaybackSession.NaturalDuration.TotalSeconds;
+        if (existing > 0 && !double.IsInfinity(existing))
+            return existing;
+
+        var tcs = new TaskCompletionSource<double>();
+        void openedHandler(MediaPlayer sender, object args)
+        {
+            player.MediaOpened -= openedHandler;
+            tcs.TrySetResult(player.PlaybackSession.NaturalDuration.TotalSeconds);
+        }
+
+        player.MediaOpened += openedHandler;
+        player.Play();
+
+        await using var reg = ct.Register(() => tcs.TrySetCanceled(ct));
+        return await tcs.Task;
     }
 }
 #else
@@ -129,6 +238,8 @@ file sealed class StubSongPlayback : ISongPlayback
 {
     public event Action? TrackEnded;
     public TimeSpan Position { get; set; }
+    public TimeSpan Duration => TimeSpan.Zero;
+    public bool IsTransitioning => false;
 
     public void Load(int playlistIndex) =>
         Console.WriteLine($"Load: Linux version WOP");
@@ -139,19 +250,18 @@ file sealed class StubSongPlayback : ISongPlayback
         return Task.FromResult(0.0);
     }
 
+    public Task<double> StartCrossfadeAsync(int nextPlaylistIndex, TimeSpan startOffset, TimeSpan crossfadeDuration, CancellationToken ct) =>
+        Play();
+
+    public void CancelTransition() { }
+
     public void Resume() => Console.WriteLine("Resume: Linux version WOP");
 
     public void Pause() => Console.WriteLine("Pause: Linux version WOP");
 
-    public void AddToPlaylist(Uri path)
-    {
-        
-    }
+    public void AddToPlaylist(Uri path) { }
 
-    public void ClearPlaylist()
-    {
-        
-    }
+    public void ClearPlaylist() { }
 
     public void Dispose() { }
 }
