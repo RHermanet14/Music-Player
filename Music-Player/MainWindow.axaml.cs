@@ -25,7 +25,6 @@ namespace Music_Player;
 public class AppSettings
 {
     public string LastOpenedFolderPath { get; set; } = "";
-    public bool TransitionsEnabled { get; set; } = true;
     public double CrossfadeSeconds { get; set; }
     public double EndTrimSeconds { get; set; }
     public double StartTrimSeconds { get; set; }
@@ -167,7 +166,6 @@ public partial class MainWindow : Window
     private Point? _dragStartPoint;
     private PointerPressedEventArgs? _dragPressEvent;
     private ListBox _playlistListBox = null!;
-    private ToggleButton _transitionsEnabledToggle = null!;
     private Slider _crossfadeSlider = null!;
     private Slider _endTrimSlider = null!;
     private Slider _startTrimSlider = null!;
@@ -181,7 +179,6 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         _playlistListBox = this.FindControl<ListBox>("playlistListBox")!;
-        _transitionsEnabledToggle = this.FindControl<ToggleButton>("transitionsEnabledToggle")!;
         _crossfadeSlider = this.FindControl<Slider>("crossfadeSlider")!;
         _endTrimSlider = this.FindControl<Slider>("endTrimSlider")!;
         _startTrimSlider = this.FindControl<Slider>("startTrimSlider")!;
@@ -250,10 +247,9 @@ public partial class MainWindow : Window
     }
 
     private bool TransitionsActive =>
-        _appSettings.TransitionsEnabled &&
-        (_appSettings.CrossfadeSeconds > 0 ||
-         _appSettings.EndTrimSeconds > 0 ||
-         _appSettings.StartTrimSeconds > 0);
+        _appSettings.CrossfadeSeconds > 0 ||
+        _appSettings.EndTrimSeconds > 0 ||
+        _appSettings.StartTrimSeconds > 0;
 
     private async Task CheckForTransitionAsync()
     {
@@ -696,7 +692,6 @@ public partial class MainWindow : Window
 
     private void ApplySettingsToUi()
     {
-        _transitionsEnabledToggle.IsChecked = _appSettings.TransitionsEnabled;
         _crossfadeSlider.Value = Math.Min(3, _appSettings.CrossfadeSeconds);
         _endTrimSlider.Value = Math.Min(3, _appSettings.EndTrimSeconds);
         _startTrimSlider.Value = Math.Min(3, _appSettings.StartTrimSeconds);
@@ -712,7 +707,6 @@ public partial class MainWindow : Window
 
     private void SaveTransitionSettings()
     {
-        _appSettings.TransitionsEnabled = _transitionsEnabledToggle.IsChecked == true;
         _appSettings.CrossfadeSeconds = _crossfadeSlider.Value;
         _appSettings.EndTrimSeconds = _endTrimSlider.Value;
         _appSettings.StartTrimSeconds = _startTrimSlider.Value;

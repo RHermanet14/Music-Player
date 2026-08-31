@@ -28,10 +28,12 @@
                             CornerRadius="6"
                             Padding="10">
                         <StackPanel Spacing="10">
-                            <TextBlock Text="Transitions" FontWeight="Bold"/>
-                            <ToggleButton x:Name="transitionsEnabledToggle"
-                                          Content="Enable transitions"
-                                          IsCheckedChanged="OnTransitionSettingChanged"/>
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Text="Volume" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="volumeValueLabel" Grid.Column="1" Text="0 db" Opacity="0.75"/>
+                            </Grid>
+                            <Slider x:Name="volumeSlider" HorizontalAlignment="Stretch" Minimum="0" Maximum="100"
+                                TickFrequency="1" IsSnapToTickEnabled="True"/>
                             <Grid ColumnDefinitions="*, Auto">
                                 <TextBlock Text="Crossfade" FontWeight="SemiBold"/>
                                 <TextBlock x:Name="crossfadeValueLabel" Grid.Column="1" Text="0 s" Opacity="0.75"/>
