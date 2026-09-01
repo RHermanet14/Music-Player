@@ -25,6 +25,7 @@ namespace Music_Player;
 public class AppSettings
 {
     public string LastOpenedFolderPath { get; set; } = "";
+    public int VolumePercent { get; set; } = 100;
     public double CrossfadeSeconds { get; set; }
     public double EndTrimSeconds { get; set; }
     public double StartTrimSeconds { get; set; }
@@ -167,9 +168,11 @@ public partial class MainWindow : Window
     private PointerPressedEventArgs? _dragPressEvent;
     private ListBox _playlistListBox = null!;
     private Slider _crossfadeSlider = null!;
+    private Slider _volumeSlider = null!;
     private Slider _endTrimSlider = null!;
     private Slider _startTrimSlider = null!;
     private TextBlock _crossfadeValueLabel = null!;
+    private TextBlock _volumeValueLabel = null!;
     private TextBlock _endTrimValueLabel = null!;
     private TextBlock _startTrimValueLabel = null!;
     private bool _transitionStarted;
@@ -180,9 +183,11 @@ public partial class MainWindow : Window
         InitializeComponent();
         _playlistListBox = this.FindControl<ListBox>("playlistListBox")!;
         _crossfadeSlider = this.FindControl<Slider>("crossfadeSlider")!;
+        _volumeSlider = this.FindControl<Slider>("volumeSlider")!;
         _endTrimSlider = this.FindControl<Slider>("endTrimSlider")!;
         _startTrimSlider = this.FindControl<Slider>("startTrimSlider")!;
         _crossfadeValueLabel = this.FindControl<TextBlock>("crossfadeValueLabel")!;
+        _volumeValueLabel = this.FindControl<TextBlock>("volumeValueLabel")!;
         _endTrimValueLabel = this.FindControl<TextBlock>("endTrimValueLabel")!;
         _startTrimValueLabel = this.FindControl<TextBlock>("startTrimValueLabel")!;
         DataContext = this;
@@ -692,14 +697,22 @@ public partial class MainWindow : Window
 
     private void ApplySettingsToUi()
     {
+        _volumeSlider.Value = _appSettings.VolumePercent;
         _crossfadeSlider.Value = Math.Min(3, _appSettings.CrossfadeSeconds);
         _endTrimSlider.Value = Math.Min(3, _appSettings.EndTrimSeconds);
         _startTrimSlider.Value = Math.Min(3, _appSettings.StartTrimSeconds);
+        ApplyVolume();
         UpdateSliderValueLabels();
+    }
+
+    private void ApplyVolume()
+    {
+        _song.Volume = _volumeSlider.Value / 100.0;
     }
 
     private void UpdateSliderValueLabels()
     {
+        _volumeValueLabel.Text = $"{(int)_volumeSlider.Value}%";
         _crossfadeValueLabel.Text = $"{_crossfadeSlider.Value:0.0} s";
         _endTrimValueLabel.Text = $"{_endTrimSlider.Value:0.0} s";
         _startTrimValueLabel.Text = $"{_startTrimSlider.Value:0.0} s";
@@ -707,10 +720,19 @@ public partial class MainWindow : Window
 
     private void SaveTransitionSettings()
     {
+        _appSettings.VolumePercent = (int)_volumeSlider.Value;
         _appSettings.CrossfadeSeconds = _crossfadeSlider.Value;
         _appSettings.EndTrimSeconds = _endTrimSlider.Value;
         _appSettings.StartTrimSeconds = _startTrimSlider.Value;
         _settings.Save(_appSettings);
+    }
+
+    private void OnVolumeChanged(object? sender, RoutedEventArgs e)
+    {
+        ApplyVolume();
+        UpdateSliderValueLabels();
+        if (!IsLoaded) return;
+        SaveTransitionSettings();
     }
 
     private void OnTransitionSettingChanged(object? sender, RoutedEventArgs e)

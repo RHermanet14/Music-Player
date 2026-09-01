@@ -8,6 +8,7 @@ public interface ISongPlayback : IDisposable
     event Action? TrackEnded;
     TimeSpan Position { get; set; }
     TimeSpan Duration { get; }
+    double Volume { get; set; }
     bool IsTransitioning { get; }
     void Load(int playlistIndex);
     Task<double> Play();
@@ -43,6 +44,18 @@ file sealed class WindowsSongPlayback : ISongPlayback
     private readonly MediaPlaybackList _playbackList = new();
     private CancellationTokenSource? _transitionCts;
     private bool _isTransitioning;
+    private double _masterVolume = 1;
+
+    public double Volume
+    {
+        get => _masterVolume;
+        set
+        {
+            _masterVolume = Math.Clamp(value, 0, 1);
+            if (!_isTransitioning)
+                _activePlayer.Volume = _masterVolume;
+        }
+    }
 
     public WindowsSongPlayback()
     {
@@ -78,6 +91,7 @@ file sealed class WindowsSongPlayback : ISongPlayback
     public async Task<double> Play()
     {
         CancelTransition();
+        _activePlayer.Volume = _masterVolume;
         _activePlayer.Play();
         return await WaitForDurationAsync(_activePlayer, CancellationToken.None);
     }
@@ -111,8 +125,8 @@ file sealed class WindowsSongPlayback : ISongPlayback
             {
                 outgoing.Pause();
                 outgoing.Source = null;
-                outgoing.Volume = 1;
-                incoming.Volume = 1;
+                outgoing.Volume = _masterVolume;
+                incoming.Volume = _masterVolume;
                 incoming.Play();
                 SwapPlayers();
                 return duration;
@@ -127,15 +141,15 @@ file sealed class WindowsSongPlayback : ISongPlayback
             {
                 token.ThrowIfCancellationRequested();
                 double t = (double)i / steps;
-                outgoing.Volume = 1 - t;
-                incoming.Volume = t;
+                outgoing.Volume = (1 - t) * _masterVolume;
+                incoming.Volume = t * _masterVolume;
                 await Task.Delay(50, token);
             }
 
             outgoing.Pause();
             outgoing.Source = null;
-            outgoing.Volume = 1;
-            incoming.Volume = 1;
+            outgoing.Volume = _masterVolume;
+            incoming.Volume = _masterVolume;
             SwapPlayers();
             return duration;
         }
@@ -160,8 +174,8 @@ file sealed class WindowsSongPlayback : ISongPlayback
 
         _inactivePlayer.Pause();
         _inactivePlayer.Source = null;
-        _inactivePlayer.Volume = 1;
-        _activePlayer.Volume = 1;
+        _inactivePlayer.Volume = _masterVolume;
+        _activePlayer.Volume = _masterVolume;
         _isTransitioning = false;
     }
 
@@ -240,6 +254,7 @@ file sealed class StubSongPlayback : ISongPlayback
     public TimeSpan Position { get; set; }
     public TimeSpan Duration => TimeSpan.Zero;
     public bool IsTransitioning => false;
+    public double Volume { get; set; } = 1;
 
     public void Load(int playlistIndex) =>
         Console.WriteLine($"Load: Linux version WOP");
