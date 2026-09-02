@@ -24,7 +24,7 @@
                     <TextBox x:Name="searchBar" PlaceholderText="Search" HorizontalAlignment="Stretch" TextChanged="OnSearchBarChanged"></TextBox>
                     <Border x:Name="settingsPanel"
                             IsVisible="{Binding IsSettingsOpen}"
-                            Background="#1A1D35"
+                            Background="{DynamicResource SecondaryBackground}"
                             CornerRadius="6"
                             Padding="10">
                         <StackPanel Spacing="10">
@@ -81,7 +81,7 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
-            <Border Grid.Row="1" Background="#303030" CornerRadius="4" Padding="10">
+            <Border Grid.Row="1" Background="{DynamicResource TertiaryBackground}" CornerRadius="4" Padding="10">
                 <StackPanel>
                     <TextBlock x:Name="CurrentSongLabel" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     <DockPanel>
@@ -148,7 +148,7 @@
         <DockPanel Grid.Column="2" IsVisible="{Binding !#RightCollapse.IsChecked}">
             <DockPanel DockPanel.Dock="Bottom" Height="40">
                 <TextBlock DockPanel.Dock="Left" HorizontalAlignment="Left" VerticalAlignment="Center" Text="Sort By:"/>
-                <ToggleButton DockPanel.Dock="Right" Click="ShuffleClick" HorizontalAlignment="Center" VerticalAlignment="Center" Content="🔀" Background="#303030"/>
+                <ToggleButton DockPanel.Dock="Right" Click="ShuffleClick" HorizontalAlignment="Center" VerticalAlignment="Center" Content="🔀" Background="{DynamicResource TertiaryBackground}"/>
                 <ComboBox x:Name="sortComboBox" SelectedIndex="0" HorizontalAlignment="Left" VerticalAlignment="Center">
                     <ComboBoxItem>Date (Increasing)</ComboBoxItem>
                     <ComboBoxItem>Date (Decreasing)</ComboBoxItem>
@@ -159,7 +159,7 @@
             <ScrollViewer
                     VerticalScrollBarVisibility="Auto"
                     HorizontalScrollBarVisibility="Auto"
-                    Background="{DynamicResource PrimaryForeground}"
+                    Background="{DynamicResource PlaylistBackground}"
                     Width="400">
                 <ListBox x:Name="playlistListBox"
                          ItemsSource="{Binding Playlist}"

@@ -7,12 +7,71 @@
     </Design.PreviewWith>
 
     <Style Selector="Button">
-        <Setter Property="FontSize" Value="20"></Setter>
-        <Setter Property="Foreground" Value="{DynamicResource PrimaryForeground}"></Setter>
-        <Setter Property="Background" Value="{DynamicResource PrimaryBackground}"></Setter>
+        <Setter Property="FontSize" Value="20"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryForeground}"/>
+        <Setter Property="Background" Value="{DynamicResource PrimaryBackground}"/>
     </Style>
     <Style Selector="Button:pointerover /template/ ContentPresenter">
-        <Setter Property="Foreground" Value="{DynamicResource PrimaryHoverForeground}"></Setter>
-        <Setter Property="Background" Value="{DynamicResource PrimaryHoverBackground}"></Setter>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryHoverForeground}"/>
+        <Setter Property="Background" Value="{DynamicResource PrimaryHoverBackground}"/>
+    </Style>
+
+    <Style Selector="ToggleButton">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryForeground}"/>
+        <Setter Property="Background" Value="{DynamicResource PrimaryBackground}"/>
+    </Style>
+    <Style Selector="ToggleButton:checked /template/ ContentPresenter">
+        <Setter Property="Foreground" Value="{DynamicResource SelectionForeground}"/>
+        <Setter Property="Background" Value="{DynamicResource SelectionBackground}"/>
+    </Style>
+    <Style Selector="ToggleButton:pointerover /template/ ContentPresenter">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryHoverForeground}"/>
+        <Setter Property="Background" Value="{DynamicResource PrimaryHoverBackground}"/>
+    </Style>
+
+    <Style Selector="TextBox">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryForeground}"/>
+        <Setter Property="Background" Value="{DynamicResource SecondaryBackground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource SliderTrackBrush}"/>
+    </Style>
+    <Style Selector="TextBox:focus">
+        <Setter Property="BorderBrush" Value="{DynamicResource FocusBorderBrush}"/>
+    </Style>
+
+    <Style Selector="ComboBox">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryForeground}"/>
+        <Setter Property="Background" Value="{DynamicResource SecondaryBackground}"/>
+    </Style>
+    <Style Selector="ComboBox:pointerover /template/ Border#Background">
+        <Setter Property="Background" Value="{DynamicResource PrimaryHoverBackground}"/>
+    </Style>
+    <Style Selector="ComboBoxItem:selected /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SelectionBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource SelectionForeground}"/>
+    </Style>
+
+    <Style Selector="ListBox">
+        <Setter Property="Background" Value="{DynamicResource PlaylistBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PlaylistForeground}"/>
+    </Style>
+    <Style Selector="ListBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource PlaylistForeground}"/>
+    </Style>
+    <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SelectionBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource SelectionForeground}"/>
+    </Style>
+    <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource PrimaryHoverBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource SelectionForeground}"/>
+    </Style>
+
+    <Style Selector="Slider">
+        <Setter Property="Foreground" Value="{DynamicResource SliderFillBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource SliderTrackBrush}"/>
+    </Style>
+    <Style Selector="Slider /template/ Thumb">
+        <Setter Property="Background" Value="{DynamicResource SliderThumbBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource SliderThumbBrush}"/>
     </Style>
 </Styles>
